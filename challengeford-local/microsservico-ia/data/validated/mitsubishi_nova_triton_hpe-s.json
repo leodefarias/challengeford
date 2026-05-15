@@ -1,0 +1,438 @@
+{
+  "catalogo": {
+    "schema": {
+      "marca": "mitsubishi",
+      "modelo": "Nova Triton",
+      "versao": "HPE-S",
+      "ano_modelo": 2025,
+      "segmento": "pickup",
+      "combustivel": "diesel",
+      "cilindrada_l": 2.4,
+      "configuracao_motor": null,
+      "inducao": "biturbo",
+      "potencia_cv": 205,
+      "torque_nm": 470,
+      "consumo_cidade_km_l": null,
+      "consumo_estrada_km_l": null,
+      "cambio_tipo": "automatico",
+      "cambio_marchas": 6,
+      "tracao": "4x4",
+      "reducao": null,
+      "diferencial_bloqueio": true,
+      "comprimento_mm": 5325,
+      "largura_mm": 1930,
+      "altura_mm": 1795,
+      "entre_eixos_mm": 3000,
+      "peso_bruto_kg": null,
+      "capacidade_carga_kg": 1000,
+      "capacidade_reboque_kg": 3500,
+      "modos_conducao": [
+        "7 modos de condução"
+      ],
+      "controle_descida": null,
+      "angulo_ataque_graus": null,
+      "angulo_saida_graus": null,
+      "angulo_rampa_graus": null,
+      "profundidade_vadeo_mm": null,
+      "airbags_quantidade": 7,
+      "frenagem_autonoma": null,
+      "aviso_colisao_frontal": null,
+      "manutencao_faixa": true,
+      "monitoramento_ponto_cego": true,
+      "camera_re": true,
+      "camera_360": true,
+      "controle_cruzeiro_adaptativo": true,
+      "estacionamento_automatico": null,
+      "tela_central_pol": 9.0,
+      "painel_digital_pol": 7.0,
+      "carplay": true,
+      "android_auto": true,
+      "conexao_sem_fio": true,
+      "teto_solar": null,
+      "bancos_material": "couro",
+      "bancos_eletricos": true,
+      "bancos_aquecidos": null,
+      "bancos_ventilados": null,
+      "ar_condicionado": "dual_zone",
+      "carregador_wireless": true,
+      "preco_tabela_brl": 245000,
+      "data_referencia_preco": null
+    },
+    "cobertura_pct": 1.0,
+    "cobertura_live_pct": 1.0,
+    "status": "completo",
+    "data_extracao": "2026-05-11T15:32:51.972878",
+    "fontes_utilizadas": [
+      "https://www.mitsubishimotors.com.br/picapes/nova-triton/"
+    ],
+    "metadados": {
+      "marca": {
+        "valor": "mitsubishi",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "modelo": {
+        "valor": "Nova Triton",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "versao": {
+        "valor": "HPE-S",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "ano_modelo": {
+        "valor": "2027",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "segmento": {
+        "valor": "pickup",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "combustivel": {
+        "valor": "diesel",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "cilindrada_l": {
+        "valor": "2.4",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "inducao": {
+        "valor": "biturbo",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "potencia_cv": {
+        "valor": "205",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "torque_nm": {
+        "valor": "470",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "cambio_tipo": {
+        "valor": "automatico",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "cambio_marchas": {
+        "valor": "6",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "tracao": {
+        "valor": "4x4",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "diferencial_bloqueio": {
+        "valor": "True",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "comprimento_mm": {
+        "valor": "5325",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "largura_mm": {
+        "valor": "1930",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "altura_mm": {
+        "valor": "1795",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "entre_eixos_mm": {
+        "valor": "3000",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "capacidade_carga_kg": {
+        "valor": "1000",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "capacidade_reboque_kg": {
+        "valor": "3500",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "modos_conducao": {
+        "valor": "['7 modos de condução']",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "airbags_quantidade": {
+        "valor": "7",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "manutencao_faixa": {
+        "valor": "True",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "monitoramento_ponto_cego": {
+        "valor": "True",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "camera_re": {
+        "valor": "True",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "camera_360": {
+        "valor": "True",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "controle_cruzeiro_adaptativo": {
+        "valor": "True",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "tela_central_pol": {
+        "valor": "9",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "painel_digital_pol": {
+        "valor": "7",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "carplay": {
+        "valor": "True",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "android_auto": {
+        "valor": "True",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "conexao_sem_fio": {
+        "valor": "True",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "bancos_material": {
+        "valor": "couro",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "bancos_eletricos": {
+        "valor": "True",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "ar_condicionado": {
+        "valor": "dual_zone",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "carregador_wireless": {
+        "valor": "True",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "preco_tabela_brl": {
+        "valor": "245000",
+        "confianca": 0.85,
+        "fonte_primaria": "https://www.mitsubishimotors.com.br/picapes/nova-triton/",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      }
+    }
+  },
+  "termos_desconhecidos": [
+    {
+      "termo": "Agromonstra",
+      "contexto": "Uma verdadeira Agromonstra: robusta, tecnológica e imbatível nos terrenos mais desafiadores.",
+      "atributo_sugerido": null,
+      "fonte": "https://www.mitsubishimotors.com.br/picapes/nova-triton/"
+    },
+    {
+      "termo": "Super Select II",
+      "contexto": "Tração 4x4 Super Select II",
+      "atributo_sugerido": "tracao",
+      "fonte": "https://www.mitsubishimotors.com.br/picapes/nova-triton/"
+    },
+    {
+      "termo": "Sport Mode",
+      "contexto": "Câmbio automático de 6 marchas com Sport Mode",
+      "atributo_sugerido": "cambio_marchas",
+      "fonte": "https://www.mitsubishimotors.com.br/picapes/nova-triton/"
+    },
+    {
+      "termo": "ACC",
+      "contexto": "ACC – Piloto automático adaptativo",
+      "atributo_sugerido": "controle_cruzeiro_adaptativo",
+      "fonte": "https://www.mitsubishimotors.com.br/picapes/nova-triton/"
+    },
+    {
+      "termo": "R/D Lock",
+      "contexto": "Bloqueio do diferencial traseiro – R/D Lock",
+      "atributo_sugerido": "diferencial_bloqueio",
+      "fonte": "https://www.mitsubishimotors.com.br/picapes/nova-triton/"
+    },
+    {
+      "termo": "BSW",
+      "contexto": "BSW – Monitoramento de pontos cegos",
+      "atributo_sugerido": "monitoramento_ponto_cego",
+      "fonte": "https://www.mitsubishimotors.com.br/picapes/nova-triton/"
+    },
+    {
+      "termo": "LDW",
+      "contexto": "LDW – Aviso de saída de faixa de rolamento",
+      "atributo_sugerido": "manutencao_faixa",
+      "fonte": "https://www.mitsubishimotors.com.br/picapes/nova-triton/"
+    },
+    {
+      "termo": "RCTA",
+      "contexto": "RCTA – Aviso de tráfego cruzado traseiro",
+      "atributo_sugerido": null,
+      "fonte": "https://www.mitsubishimotors.com.br/picapes/nova-triton/"
+    },
+    {
+      "termo": "Dynamic Shield",
+      "contexto": "Apliques nas caixa de rodas, maçanetas, retrovisores, Dynamic Shield e para-choque traseiro em preto brilhante",
+      "atributo_sugerido": null,
+      "fonte": "https://www.mitsubishimotors.com.br/picapes/nova-triton/"
+    }
+  ],
+  "gaps_restantes": [],
+  "log_decisoes": [
+    "Iniciando extração: mitsubishi Nova Triton HPE-S",
+    "Contexto CRAG construído (790 chars)",
+    "PDF não disponível para esta montadora",
+    "Site extraído: 5205 chars, seções=[]",
+    "FIPE: preço não encontrado (código pendente)",
+    "CRAG context rebuilt for site: focusing on 14 gaps",
+    "LLM extraindo do site...",
+    "Site LLM: 54 atributos extraídos",
+    "Cobertura live (antes do seed KB): 14/14 (100%)",
+    "Cobertura core: 14/14 (100%) — status=completo",
+    "KB enriquecida com catálogo validado",
+    "Processamento concluído em 32.9s"
+  ]
+}

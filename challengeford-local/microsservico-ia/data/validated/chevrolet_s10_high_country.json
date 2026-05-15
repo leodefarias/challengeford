@@ -1,0 +1,449 @@
+{
+  "catalogo": {
+    "schema": {
+      "marca": "chevrolet",
+      "modelo": "S10",
+      "versao": "High Country",
+      "ano_modelo": 2024,
+      "segmento": "pickup",
+      "combustivel": "diesel",
+      "cilindrada_l": 2.8,
+      "configuracao_motor": "4 cilindros turbo diesel",
+      "inducao": "turbo",
+      "potencia_cv": 200,
+      "torque_nm": 500,
+      "consumo_cidade_km_l": null,
+      "consumo_estrada_km_l": null,
+      "cambio_tipo": "automatico",
+      "cambio_marchas": 6,
+      "tracao": "4x4",
+      "reducao": true,
+      "diferencial_bloqueio": true,
+      "comprimento_mm": 5380,
+      "largura_mm": 1874,
+      "altura_mm": 1789,
+      "entre_eixos_mm": 3098,
+      "peso_bruto_kg": 2985,
+      "capacidade_carga_kg": 820,
+      "capacidade_reboque_kg": 3500,
+      "modos_conducao": null,
+      "controle_descida": true,
+      "angulo_ataque_graus": 28.0,
+      "angulo_saida_graus": 24.0,
+      "angulo_rampa_graus": null,
+      "profundidade_vadeo_mm": 600,
+      "airbags_quantidade": 6,
+      "frenagem_autonoma": false,
+      "aviso_colisao_frontal": false,
+      "manutencao_faixa": false,
+      "monitoramento_ponto_cego": false,
+      "camera_re": true,
+      "camera_360": false,
+      "controle_cruzeiro_adaptativo": false,
+      "estacionamento_automatico": null,
+      "tela_central_pol": 8.0,
+      "painel_digital_pol": 5.0,
+      "carplay": true,
+      "android_auto": true,
+      "conexao_sem_fio": false,
+      "teto_solar": null,
+      "bancos_material": "couro",
+      "bancos_eletricos": true,
+      "bancos_aquecidos": false,
+      "bancos_ventilados": false,
+      "ar_condicionado": "dual_zone",
+      "carregador_wireless": false,
+      "preco_tabela_brl": 260000,
+      "data_referencia_preco": null
+    },
+    "cobertura_pct": 1.0,
+    "status": "completo",
+    "data_extracao": "2026-05-08T14:35:50.306763",
+    "fontes_utilizadas": [
+      "seed_manual"
+    ],
+    "metadados": {
+      "marca": {
+        "valor": "chevrolet",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "modelo": {
+        "valor": "S10",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "versao": {
+        "valor": "High Country",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "ano_modelo": {
+        "valor": "2024",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "segmento": {
+        "valor": "pickup",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "combustivel": {
+        "valor": "diesel",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "cilindrada_l": {
+        "valor": "2.8",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "configuracao_motor": {
+        "valor": "4 cilindros turbo diesel",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "inducao": {
+        "valor": "turbo",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "potencia_cv": {
+        "valor": "200",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "torque_nm": {
+        "valor": "500",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "cambio_tipo": {
+        "valor": "automatico",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "cambio_marchas": {
+        "valor": "6",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "tracao": {
+        "valor": "4x4",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "reducao": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "diferencial_bloqueio": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "comprimento_mm": {
+        "valor": "5380",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "largura_mm": {
+        "valor": "1874",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "altura_mm": {
+        "valor": "1789",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "entre_eixos_mm": {
+        "valor": "3098",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "peso_bruto_kg": {
+        "valor": "2985",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "capacidade_carga_kg": {
+        "valor": "820",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "capacidade_reboque_kg": {
+        "valor": "3500",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "controle_descida": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "angulo_ataque_graus": {
+        "valor": "28.0",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "angulo_saida_graus": {
+        "valor": "24.0",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "profundidade_vadeo_mm": {
+        "valor": "600",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "airbags_quantidade": {
+        "valor": "6",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "frenagem_autonoma": {
+        "valor": "False",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "aviso_colisao_frontal": {
+        "valor": "False",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "manutencao_faixa": {
+        "valor": "False",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "monitoramento_ponto_cego": {
+        "valor": "False",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "camera_re": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "camera_360": {
+        "valor": "False",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "controle_cruzeiro_adaptativo": {
+        "valor": "False",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "tela_central_pol": {
+        "valor": "8.0",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "painel_digital_pol": {
+        "valor": "5.0",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "carplay": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "android_auto": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "conexao_sem_fio": {
+        "valor": "False",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "bancos_material": {
+        "valor": "couro",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "bancos_eletricos": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "bancos_aquecidos": {
+        "valor": "False",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "bancos_ventilados": {
+        "valor": "False",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "ar_condicionado": {
+        "valor": "dual_zone",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "carregador_wireless": {
+        "valor": "False",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "preco_tabela_brl": {
+        "valor": "260000",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      }
+    }
+  },
+  "termos_desconhecidos": [],
+  "gaps_restantes": [],
+  "log_decisoes": [
+    "Carregado de seed manual"
+  ]
+}

@@ -1,0 +1,15 @@
+.env
+*.env
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+data/chromadb/
+*.db
+*.sqlite
+*.sqlite3
+.pytest_cache/
+dist/
+build/
+*.egg-info/
