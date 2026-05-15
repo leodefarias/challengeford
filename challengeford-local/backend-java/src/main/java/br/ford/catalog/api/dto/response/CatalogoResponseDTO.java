@@ -1,0 +1,21 @@
+package br.ford.catalog.api.dto.response;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+public record CatalogoResponseDTO(
+        Long id,
+        String marca,
+        String modelo,
+        String versao,
+        Integer anoModelo,
+        String segmento,
+        String status,
+        Double coberturaPct,
+        Double coberturaLivePct,
+        Double scoreTecnico,
+        Double scoreValor,
+        LocalDateTime dataExtracao,
+        List<AtributoDTO> atributos,
+        List<CapabilityScoreDTO> capabilities
+) {}

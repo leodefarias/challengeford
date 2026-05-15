@@ -1,0 +1,58 @@
+version: "3.9"
+
+services:
+
+  # ── Microsserviço IA (Python FastAPI + ChromaDB) ──────────────────
+  python-ia:
+    build:
+      context: ./microsservico-ia
+      dockerfile: Dockerfile
+    container_name: ford-python-ia
+    ports:
+      - "8000:8000"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      LLM_PROVIDER: ${LLM_PROVIDER:-claude}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY:-}
+      CHROMA_PERSIST_DIR: /app/data/chromadb
+    volumes:
+      - chroma_data:/app/data/chromadb
+      - ./microsservico-ia/data/seed:/app/data/seed:ro
+      - ./microsservico-ia/data/pdfs:/app/data/pdfs:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  # ── API Java Spring Boot (conecta no Oracle FIAP remoto) ──────────
+  java-api:
+    build:
+      context: ./backend-java
+      dockerfile: Dockerfile
+    container_name: ford-java-api
+    ports:
+      - "8080:8080"
+    environment:
+      ORACLE_URL: ${ORACLE_URL:-jdbc:oracle:thin:@oracle.fiap.com.br:1521/ORCL}
+      ORACLE_USER: ${ORACLE_USER:-RM555211}
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:-281005}
+      PYTHON_SERVICE_URL: http://python-ia:8000
+      JWT_SECRET: ${JWT_SECRET:-ford_catalog_jwt_secret_minimo_256_bits_para_producao}
+    depends_on:
+      python-ia:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
+    name: ford_chromadb

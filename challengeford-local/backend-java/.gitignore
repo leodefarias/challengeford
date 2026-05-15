@@ -1,0 +1,13 @@
+.env
+*.env
+application-local.yml
+target/
+*.jar
+*.war
+*.class
+.mvn/
+.idea/
+*.iml
+.settings/
+.classpath
+.project

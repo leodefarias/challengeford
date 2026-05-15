@@ -1,0 +1,469 @@
+{
+  "catalogo": {
+    "schema": {
+      "marca": "vw",
+      "modelo": "Amarok",
+      "versao": "V6 Extreme",
+      "ano_modelo": 2026,
+      "segmento": "pickup",
+      "combustivel": "diesel",
+      "cilindrada_l": 3.0,
+      "configuracao_motor": "V6 biturbo diesel",
+      "inducao": "biturbo",
+      "potencia_cv": 258,
+      "torque_nm": 600,
+      "consumo_cidade_km_l": null,
+      "consumo_estrada_km_l": null,
+      "cambio_tipo": "automatico",
+      "cambio_marchas": 8,
+      "tracao": "4x4_tempo_integral",
+      "reducao": true,
+      "diferencial_bloqueio": true,
+      "comprimento_mm": 5350,
+      "largura_mm": 1954,
+      "altura_mm": 1882,
+      "entre_eixos_mm": 3098,
+      "peso_bruto_kg": 3200,
+      "capacidade_carga_kg": 1145,
+      "capacidade_reboque_kg": 3500,
+      "modos_conducao": [
+        "On-Road",
+        "Off-Road",
+        "Snow"
+      ],
+      "controle_descida": true,
+      "angulo_ataque_graus": 27.6,
+      "angulo_saida_graus": 25.9,
+      "angulo_rampa_graus": null,
+      "profundidade_vadeo_mm": 500,
+      "airbags_quantidade": 8,
+      "frenagem_autonoma": true,
+      "aviso_colisao_frontal": true,
+      "manutencao_faixa": true,
+      "monitoramento_ponto_cego": true,
+      "camera_re": true,
+      "camera_360": true,
+      "controle_cruzeiro_adaptativo": true,
+      "estacionamento_automatico": true,
+      "tela_central_pol": 12.0,
+      "painel_digital_pol": 10.3,
+      "carplay": true,
+      "android_auto": true,
+      "conexao_sem_fio": true,
+      "teto_solar": null,
+      "bancos_material": "couro",
+      "bancos_eletricos": true,
+      "bancos_aquecidos": true,
+      "bancos_ventilados": true,
+      "ar_condicionado": "dual_zone",
+      "carregador_wireless": true,
+      "preco_tabela_brl": 305451,
+      "data_referencia_preco": null
+    },
+    "cobertura_pct": 1.0,
+    "status": "completo",
+    "data_extracao": "2026-05-08T14:35:50.310472",
+    "fontes_utilizadas": [
+      "seed_manual"
+    ],
+    "metadados": {
+      "marca": {
+        "valor": "vw",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "modelo": {
+        "valor": "Amarok",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "versao": {
+        "valor": "V6 Extreme",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "ano_modelo": {
+        "valor": "2026",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "segmento": {
+        "valor": "pickup",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "combustivel": {
+        "valor": "diesel",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "cilindrada_l": {
+        "valor": "3.0",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "configuracao_motor": {
+        "valor": "V6 biturbo diesel",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "inducao": {
+        "valor": "biturbo",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "potencia_cv": {
+        "valor": "258",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "torque_nm": {
+        "valor": "600",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "cambio_tipo": {
+        "valor": "automatico",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "cambio_marchas": {
+        "valor": "8",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "tracao": {
+        "valor": "4x4_tempo_integral",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "reducao": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "diferencial_bloqueio": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "comprimento_mm": {
+        "valor": "5350",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "largura_mm": {
+        "valor": "1954",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "altura_mm": {
+        "valor": "1882",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "entre_eixos_mm": {
+        "valor": "3098",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "peso_bruto_kg": {
+        "valor": "3200",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "capacidade_carga_kg": {
+        "valor": "1145",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "capacidade_reboque_kg": {
+        "valor": "3500",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "modos_conducao": {
+        "valor": "['On-Road', 'Off-Road', 'Snow']",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "controle_descida": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "angulo_ataque_graus": {
+        "valor": "27.6",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "angulo_saida_graus": {
+        "valor": "25.9",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "profundidade_vadeo_mm": {
+        "valor": "500",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "airbags_quantidade": {
+        "valor": "8",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "frenagem_autonoma": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "aviso_colisao_frontal": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "manutencao_faixa": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "monitoramento_ponto_cego": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "camera_re": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "camera_360": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "controle_cruzeiro_adaptativo": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "estacionamento_automatico": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "tela_central_pol": {
+        "valor": "12.0",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "painel_digital_pol": {
+        "valor": "10.3",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "carplay": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "android_auto": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      },
+      "conexao_sem_fio": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "bancos_material": {
+        "valor": "couro",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "bancos_eletricos": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "bancos_aquecidos": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "bancos_ventilados": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "ar_condicionado": {
+        "valor": "dual_zone",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "carregador_wireless": {
+        "valor": "True",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "estendido"
+      },
+      "preco_tabela_brl": {
+        "valor": "305451",
+        "confianca": 0.95,
+        "fonte_primaria": "seed_manual",
+        "mercado_confirmado_br": true,
+        "divergente": false,
+        "schema_nivel": "core"
+      }
+    }
+  },
+  "termos_desconhecidos": [],
+  "gaps_restantes": [],
+  "log_decisoes": [
+    "Carregado de seed manual"
+  ]
+}
