@@ -30,6 +30,8 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration-hours: 8
+  encryption:
+    key: ${ENCRYPTION_KEY}
 
 server:
   port: 8080

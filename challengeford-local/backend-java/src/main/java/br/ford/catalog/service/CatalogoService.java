@@ -72,9 +72,9 @@ public class CatalogoService {
                 .findByMarcaAndModeloAndVersao(marca, modelo, versao)
                 .orElse(CatalogoEntity.builder().build());
 
-        catalogo.setMarca(marca);
-        catalogo.setModelo(modelo);
-        catalogo.setVersao(versao);
+        catalogo.setMarca(inputSanitizer.sanitize(marca));
+        catalogo.setModelo(inputSanitizer.sanitize(modelo));
+        catalogo.setVersao(inputSanitizer.sanitize(versao));
         catalogo.setAnoModelo(toInt(schema.get("ano_modelo")));
         catalogo.setSegmento((String) schema.getOrDefault("segmento", "pickup"));
         catalogo.setStatus(mapStatus(dto.getStatus()));

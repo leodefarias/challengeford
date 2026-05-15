@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { Colors, FontFamily, FontSize } from '../theme';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -91,7 +91,7 @@ export default function AppNavigator() {
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem('jwt_token').then(token => {
+    SecureStore.getItemAsync('jwt_token').then(token => {
       setInitialRoute(token ? 'MainTabs' : 'Login');
     });
   }, []);

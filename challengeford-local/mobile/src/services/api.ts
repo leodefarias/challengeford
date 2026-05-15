@@ -1,12 +1,12 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 const api = axios.create({ baseURL: BASE_URL });
 
 api.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem('jwt_token');
+  const token = await SecureStore.getItemAsync('jwt_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -31,16 +31,16 @@ api.interceptors.response.use(
 
 export async function login(email: string, senha: string) {
   const res = await api.post('/api/auth/login', { email, senha });
-  await AsyncStorage.setItem('jwt_token', res.data.token);
+  await SecureStore.setItemAsync('jwt_token', res.data.token);
   if (res.data.nome) {
-    await AsyncStorage.setItem('user_name', res.data.nome);
-    await AsyncStorage.setItem('user_role', res.data.role ?? 'viewer');
+    await SecureStore.setItemAsync('user_name', res.data.nome);
+    await SecureStore.setItemAsync('user_role', res.data.role ?? 'viewer');
   }
   return res.data;
 }
 
 export async function logout() {
-  await AsyncStorage.removeItem('jwt_token');
+  await SecureStore.deleteItemAsync('jwt_token');
 }
 
 export async function getCatalogos() {
