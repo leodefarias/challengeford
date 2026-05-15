@@ -1,5 +1,6 @@
 package br.ford.catalog.domain.entity;
 
+import br.ford.catalog.security.EncryptedStringConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,10 +23,12 @@ public class ChatCacheEntity {
     private String perguntaHash;
 
     @Lob
+    @Convert(converter = EncryptedStringConverter.class)
     @Column(name = "PERGUNTA_ORIGINAL", nullable = false)
     private String perguntaOriginal;
 
     @Lob
+    @Convert(converter = EncryptedStringConverter.class)
     @Column(name = "RESPOSTA", nullable = false)
     private String resposta;
 

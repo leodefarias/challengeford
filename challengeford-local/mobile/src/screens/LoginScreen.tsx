@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Colors, FontFamily, FontSize, Spacing, Radius } from '../theme';
 import { login } from '../services/api';
+import { sanitizeInput, isValidEmail } from '../utils/sanitize';
 
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
@@ -20,14 +21,21 @@ export default function LoginScreen({ navigation }: any) {
   const [error, setError] = useState('');
 
   async function handleLogin() {
-    if (!email.trim() || !senha.trim()) {
+    const cleanEmail = sanitizeInput(email.trim().toLowerCase(), 254);
+    const cleanSenha = sanitizeInput(senha, 128);
+
+    if (!cleanEmail || !cleanSenha) {
       setError('Preencha e-mail e senha.');
+      return;
+    }
+    if (!isValidEmail(cleanEmail)) {
+      setError('E-mail inválido.');
       return;
     }
     setLoading(true);
     setError('');
     try {
-      await login(email.trim().toLowerCase(), senha);
+      await login(cleanEmail, cleanSenha);
       navigation.replace('MainTabs');
     } catch (e: any) {
       setError(e?.message ?? 'Erro ao fazer login.');

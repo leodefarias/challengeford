@@ -25,7 +25,9 @@ from schema import CatalogoSchema, ATRIBUTOS_CORE, MarcaEnum
 
 logger = logging.getLogger(__name__)
 
-_INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "")
+_INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY")
+if not _INTERNAL_API_KEY:
+    raise RuntimeError("INTERNAL_API_KEY env var não configurada — serviço não pode iniciar sem autenticação")
 _ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://java-api:8080",
@@ -309,7 +311,8 @@ async def health():
             "catalogos_salvos": len(_listar_catalogos()),
         }
     except Exception as exc:
-        return {"status": "degraded", "erro": str(exc)}
+        logger.error("Health check falhou: %s", exc, exc_info=True)
+        return {"status": "degraded", "erro": "serviço indisponível"}
 
 
 @app.post("/extrair")
@@ -357,20 +360,22 @@ async def extrair(request: Request, req: ExtrairRequest, background_tasks: Backg
 
         return {"fonte": "novo", **resultado_dict}
     except Exception as exc:
-        logger.error("Erro ao processar %s: %s", key, exc)
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.error("Erro ao processar %s: %s", key, exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="Erro interno no processamento")
     finally:
         _processando.discard(key)
 
 
 @app.get("/catalogos")
-async def listar_catalogos():
+@limiter.limit("30/minute")
+async def listar_catalogos(request: Request):
     """Lista todos os catálogos já processados."""
     return {"catalogos": _listar_catalogos()}
 
 
 @app.get("/catalogos/{marca}/{modelo}/{versao}")
-async def obter_catalogo(marca: str, modelo: str, versao: str):
+@limiter.limit("30/minute")
+async def obter_catalogo(request: Request, marca: str, modelo: str, versao: str):
     """Retorna catálogo processado ou 404."""
     data = _carregar_catalogo(marca, modelo, versao)
     if not data:
@@ -382,7 +387,8 @@ async def obter_catalogo(marca: str, modelo: str, versao: str):
 
 
 @app.post("/comparar")
-async def comparar(req: ComparacaoRequest):
+@limiter.limit("10/minute")
+async def comparar(request: Request, req: ComparacaoRequest):
     """
     Compara N veículos lado a lado nos atributos solicitados.
     Veículos não processados são ignorados (use /extrair antes).
@@ -683,7 +689,8 @@ async def _gerar_justificativa(resultados: list[dict], criterios: dict[str, floa
 
 
 @app.post("/ranking")
-async def ranking(req: RankingRequest):
+@limiter.limit("20/minute")
+async def ranking(request: Request, req: RankingRequest):
     """
     Ranking determinístico por critérios ponderados com justificativa LLM.
     Use 'perfil' para um preset (familia/desempenho/custo_beneficio/offroad)
