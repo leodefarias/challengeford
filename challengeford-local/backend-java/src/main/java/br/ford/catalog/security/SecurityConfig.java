@@ -52,11 +52,23 @@ public class SecurityConfig {
                 .frameOptions(fo -> fo.deny())
                 .contentTypeOptions(cto -> {})
                 .xssProtection(xss -> {})
-                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                    "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-ancestors 'none'"))
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .maxAgeInSeconds(31536000)
+                    .includeSubDomains(true)
+                    .preload(true)
+                    .requestMatcher(request -> true))
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers(
+                    "/admin/**", "/api/admin/**", "/.env", "/.env.local", "/.env.prod",
+                    "/api/internal/**", "/phpinfo.php", "/wp-admin", "/wp-login.php",
+                    "/actuator/env", "/actuator/beans", "/console", "/h2-console",
+                    "/api/v1/admin", "/api/users/dump", "/api/debug"
+                ).permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

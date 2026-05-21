@@ -21,10 +21,7 @@ public class TraceIdFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
-        String traceId = request.getHeader(TRACE_HEADER);
-        if (traceId == null || traceId.isBlank()) {
-            traceId = UUID.randomUUID().toString();
-        }
+        String traceId = UUID.randomUUID().toString();
         MDC.put(MDC_KEY, traceId);
         response.setHeader(TRACE_HEADER, traceId);
         try {

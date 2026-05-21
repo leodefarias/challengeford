@@ -5,10 +5,12 @@ import br.ford.catalog.api.dto.response.CatalogoResumoDTO;
 import br.ford.catalog.domain.entity.CatalogoEntity;
 import br.ford.catalog.domain.entity.CatalogoEntity.CatalogoStatus;
 import br.ford.catalog.domain.repository.*;
+import br.ford.catalog.security.InputSanitizer;
 import br.ford.catalog.service.dto.PythonAtributoMetaDTO;
 import br.ford.catalog.service.dto.PythonCatalogoDTO;
 import br.ford.catalog.service.dto.ResultadoPythonDTO;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -22,6 +24,7 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,8 +36,14 @@ class CatalogoServiceTest {
     @Mock private ScoreCompetitivoRepository scoreCompetitivoRepository;
     @Mock private CapabilityScoreRepository capabilityScoreRepository;
     @Mock private PythonClientService pythonClient;
+    @Mock private InputSanitizer inputSanitizer;
 
     @InjectMocks private CatalogoService catalogoService;
+
+    @BeforeEach
+    void setup() {
+        lenient().when(inputSanitizer.sanitize(anyString())).thenAnswer(inv -> inv.getArgument(0));
+    }
 
     private CatalogoEntity catalogoFixture(Long id, String marca) {
         return CatalogoEntity.builder()

@@ -97,4 +97,28 @@ class AuthServiceTest {
         assertThat(criado.getSenhaHash()).isEqualTo("$2b$12$hashed_novo");
         assertThat(criado.getRole()).isEqualTo(UserRole.analista);
     }
+
+    @Test
+    void anonimizarUsuario_usuarioExiste_anonimizaDados() {
+        UsuarioEntity usuario = adminFixture();
+        when(usuarioRepository.findByEmail("admin@ford.com.br")).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.encode(anyString())).thenReturn("$2b$12$random_hash");
+        when(usuarioRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        authService.anonimizarUsuario("admin@ford.com.br");
+
+        assertThat(usuario.getEmail()).startsWith("anonimizado_");
+        assertThat(usuario.getNome()).isEqualTo("Usuário Removido");
+        assertThat(usuario.isAtivo()).isFalse();
+        assertThat(usuario.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void anonimizarUsuario_usuarioNaoExiste_lancaIllegalArgument() {
+        when(usuarioRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.anonimizarUsuario("nao@existe.com"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("não encontrado");
+    }
 }
