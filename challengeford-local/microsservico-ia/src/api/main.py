@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hmac
 import json
 import logging
 import os
@@ -60,7 +61,7 @@ async def verify_internal_token(request: Request, call_next) -> Response:
         return await call_next(request)
     if _INTERNAL_API_KEY:
         token = request.headers.get("X-Internal-Token", "")
-        if token != _INTERNAL_API_KEY:
+        if not hmac.compare_digest(token, _INTERNAL_API_KEY):
             return JSONResponse(status_code=401, content={"detail": "Token interno inválido"})
     return await call_next(request)
 

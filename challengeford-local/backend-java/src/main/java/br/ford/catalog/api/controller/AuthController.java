@@ -14,6 +14,8 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,5 +58,16 @@ public class AuthController {
         }
         authService.criarUsuario(email, senha, nome, userRole);
         return ResponseEntity.ok(Map.of("message", "Usuário criado com sucesso"));
+    }
+
+    @Operation(summary = "Anonimizar conta (LGPD)", description = "Pseudoanonimiza dados pessoais — irreversível. Conforme LGPD Art. 16.")
+    @ApiResponse(responseCode = "200", description = "Conta anonimizada")
+    @ApiResponse(responseCode = "401", description = "Não autenticado")
+    @DeleteMapping("/me")
+    public ResponseEntity<Map<String, String>> anonimizarConta(@AuthenticationPrincipal UserDetails principal) {
+        authService.anonimizarUsuario(principal.getUsername());
+        return ResponseEntity.ok(Map.of(
+                "message", "Dados pessoais anonimizados conforme LGPD. Acesso encerrado."
+        ));
     }
 }

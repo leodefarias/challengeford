@@ -4,29 +4,50 @@ import br.ford.catalog.domain.entity.UsuarioEntity.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Base64;
 import java.util.Date;
 
 @Slf4j
 @Component
 public class JwtUtil {
 
-    private final SecretKey key;
-    private final long expirationHours;
+    private static final String ISSUER   = "ford-catalog";
+    private static final String AUDIENCE = "ford-catalog-api";
+
+    private final PrivateKey privateKey;
+    private final PublicKey  publicKey;
+    private final long       expirationHours;
 
     public JwtUtil(
-            @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration-hours}") long expirationHours) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+            @Value("${app.jwt.rsa-private-key:}") String rsaPrivateKeyB64,
+            @Value("${app.jwt.rsa-public-key:}")  String rsaPublicKeyB64,
+            @Value("${app.jwt.expiration-hours}")  long expirationHours) throws Exception {
         this.expirationHours = expirationHours;
+
+        if (!rsaPrivateKeyB64.isBlank() && !rsaPublicKeyB64.isBlank()) {
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            byte[] privBytes = Base64.getDecoder().decode(rsaPrivateKeyB64.trim());
+            byte[] pubBytes  = Base64.getDecoder().decode(rsaPublicKeyB64.trim());
+            this.privateKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privBytes));
+            this.publicKey  = kf.generatePublic(new X509EncodedKeySpec(pubBytes));
+            log.info("[SECURITY] JWT RS256 — par de chaves RSA carregado das variáveis de ambiente");
+        } else {
+            log.warn("[SECURITY] RSA_PRIVATE_KEY/RSA_PUBLIC_KEY não configurados — gerando par efêmero 2048-bit. Tokens invalidados a cada restart.");
+            KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+            kpg.initialize(2048, new SecureRandom());
+            KeyPair kp = kpg.generateKeyPair();
+            this.privateKey = kp.getPrivate();
+            this.publicKey  = kp.getPublic();
+        }
     }
 
     public String gerarToken(Long userId, String email, UserRole role) {
@@ -34,21 +55,28 @@ public class JwtUtil {
                 LocalDateTime.now().plusHours(expirationHours)
                         .atZone(ZoneId.systemDefault()).toInstant());
         return Jwts.builder()
+                .issuer(ISSUER)
+                .audience().add(AUDIENCE).and()
                 .subject(email)
                 .claim("userId", userId)
                 .claim("role", role.name())
                 .issuedAt(new Date())
                 .expiration(expiration)
-                .signWith(key)
+                .signWith(privateKey, Jwts.SIG.RS256)
                 .compact();
     }
 
     public boolean validarToken(String token) {
         try {
-            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            Jwts.parser()
+                    .verifyWith(publicKey)
+                    .requireIssuer(ISSUER)
+                    .requireAudience(AUDIENCE)
+                    .build()
+                    .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            log.debug("JWT inválido: {}", e.getMessage());
+            log.warn("[SECURITY] JWT inválido: {}", e.getMessage());
             return false;
         }
     }
@@ -66,7 +94,10 @@ public class JwtUtil {
     }
 
     private Claims getClaims(String token) {
-        return Jwts.parser().verifyWith(key).build()
-                .parseSignedClaims(token).getPayload();
+        return Jwts.parser()
+                .verifyWith(publicKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

@@ -47,6 +47,9 @@ public class UsuarioEntity implements UserDetails {
     @Column(name = "ULTIMO_ACESSO")
     private LocalDateTime ultimoAcesso;
 
+    @Column(name = "DELETED_AT")
+    private LocalDateTime deletedAt;
+
     @PrePersist
     private void prePersist() {
         if (dataCriacao == null) dataCriacao = LocalDateTime.now();

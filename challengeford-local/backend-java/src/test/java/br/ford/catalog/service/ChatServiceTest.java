@@ -3,6 +3,7 @@ package br.ford.catalog.service;
 import br.ford.catalog.api.dto.response.ChatResponseDTO;
 import br.ford.catalog.domain.entity.ChatCacheEntity;
 import br.ford.catalog.domain.repository.ChatCacheRepository;
+import br.ford.catalog.security.InputSanitizer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,8 +25,14 @@ class ChatServiceTest {
 
     @Mock private ChatCacheRepository cacheRepository;
     @Mock private PythonClientService pythonClient;
+    @Mock private InputSanitizer inputSanitizer;
 
     @InjectMocks private ChatService chatService;
+
+    @BeforeEach
+    void setup() {
+        when(inputSanitizer.sanitize(anyString())).thenAnswer(inv -> inv.getArgument(0));
+    }
 
     @Test
     void chat_cacheHit_returnsCachedResponse() {

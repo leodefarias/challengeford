@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -41,6 +42,20 @@ public class AuthService {
                 usuario.getNome(),
                 usuario.getRole().name()
         );
+    }
+
+    @Transactional
+    public void anonimizarUsuario(String email) {
+        UsuarioEntity usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        usuario.setEmail("anonimizado_" + uuid + "@deleted.invalid");
+        usuario.setNome("Usuário Removido");
+        usuario.setSenhaHash(passwordEncoder.encode(UUID.randomUUID().toString()));
+        usuario.setAtivo(false);
+        usuario.setDeletedAt(LocalDateTime.now());
+        usuarioRepository.save(usuario);
+        log.info("AUDIT|lgpd_anonimizacao|email_original={}|deleted_at={}", email, usuario.getDeletedAt());
     }
 
     @Transactional
