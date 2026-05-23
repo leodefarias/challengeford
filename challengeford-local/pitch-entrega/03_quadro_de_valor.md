@@ -9,14 +9,14 @@
 
 | # | Stakeholder | O que Espera | O que a Solução Entrega | Métrica de Negócio | Meta Negócio | Métrica de Qualidade | Meta Qualidade | Prioridade |
 |---|---|---|---|---|---|---|---|---|
-| 1 | **Time de Produto Ford** | Análise competitiva ágil de specs técnicas | Dashboard comparativo: 6 veículos, 50+ atributos, gaps, scores | Redução de tempo de análise (h/ciclo) | 80h → < 4h (redução de 95%) | Latência API P95 | < 2 segundos | **Alta** |
-| 2 | **Time de Marketing Ford** | Dados para posicionamento de campanha | Rankings por perfil comprador + análise de gaps vs. Ranger Raptor | Insights acionáveis por semana | ≥ 2 insights/semana | Disponibilidade do serviço | ≥ 99% uptime | **Alta** |
-| 3 | **Time de Estratégia Ford** | Visão de mercado em tempo real | Timeline de atualizações de catálogos + alertas de mudança | Tempo de detecção de mudança concorrente | < 24 horas | Acurácia de extração | ≥ 90% vs. PDF | **Alta** |
-| 4 | **Vendas / Concessionárias** | Argumentos técnicos precisos e atualizados | Chat RAG em português sobre catálogos | Redução de tempo de treinamento técnico de vendas | Redução de 50% (40h → 20h) | Confiança de respostas RAG | ≥ 0.85/1.0 | **Média** |
-| 5 | **TI Ford** | Integração com sistemas internos | REST API REST + Swagger UI + JWT + Docker | Tempo para integrar ao ecossistema Ford | < 1 sprint (2 semanas) | Cobertura de testes automatizados | ≥ 80% | **Média** |
-| 6 | **Compliance / Jurídico** | Rastreabilidade e auditabilidade de dados | Metadados de fonte por atributo + log de acesso | % de atributos com fonte rastreável | 100% | Completude do audit log | 100% eventos registrados | **Média** |
-| 7 | **Gestão / Diretoria Ford** | ROI e redução de custo operacional | Relatório de economia: custo analista vs. custo plataforma | Redução de custo operacional anual | ≥ R$ 40.000/ano | Custo por extração de catálogo | < R$ 0.50/extração | **Baixa** |
-| 8 | **Equipe AutoSight (FIAP)** | Entregável completo dentro do prazo | Código funcional, documentação TOGAF, pitch + vídeo | Cumprimento do roadmap de sprints | 100% entregas Sprint 3 + 4 | Cobertura de testes + sem vulnerabilidades críticas | OWASP Top 10 sem críticos | **Alta** |
+| 1 | **Time de Produto Ford** | Análise competitiva ágil de specs técnicas | Dashboard comparativo: 6 veículos, 50+ atributos, gaps, scores — **implementado** | Redução de tempo de análise (h/ciclo) | 80h → < 4h (redução de 95%) | Latência API P95 | < 2 segundos | **Alta** |
+| 2 | **Time de Marketing Ford** | Dados para posicionamento de campanha | Rankings por perfil comprador (4 perfis) + análise de gaps vs. Ranger Raptor — **implementado** | Insights acionáveis por semana | ≥ 2 insights/semana | Disponibilidade do serviço | ≥ 99% uptime | **Alta** |
+| 3 | **Time de Estratégia Ford** | Visão de mercado em tempo real | Timeline de atualizações de catálogos + alertas de mudança — **implementado** | Tempo de detecção de mudança concorrente | < 24 horas | Acurácia de extração | ≥ 90% vs. PDF | **Alta** |
+| 4 | **Vendas / Concessionárias** | Argumentos técnicos precisos e atualizados | Chat RAG Adaptativo em PT-BR sobre catálogos — **implementado** | Redução de tempo de treinamento técnico de vendas | Redução de 50% (40h → 20h) | Confiança de respostas RAG | ≥ 0.85/1.0 | **Média** |
+| 5 | **TI Ford** | Integração com sistemas internos | REST API + Swagger UI + JWT + RBAC + Docker Compose — **implementado** | Tempo para integrar ao ecossistema Ford | < 1 sprint (2 semanas) | Cobertura de testes automatizados | ≥ 80% | **Média** |
+| 6 | **Compliance / Jurídico** | Rastreabilidade e auditabilidade de dados | `fonte_primaria` + `confianca` por atributo + `EVENTOS_SEGURANCA` + RBAC — **implementado** | % de atributos com fonte rastreável | 100% | Completude do audit log | 100% eventos registrados | **Média** |
+| 7 | **Gestão / Diretoria Ford** | ROI e redução de custo operacional | Economia de 76h/mês analista + custo de ~R$ 0,50/extração vs. R$ 8.000/ciclo manual — **mensurável** | Redução de custo operacional anual | ≥ R$ 40.000/ano | Custo por extração de catálogo | < R$ 0,50/extração | **Baixa** |
+| 8 | **Equipe AutoSight (FIAP)** | Entregável completo dentro do prazo | Código funcional, segurança OWASP, Docker estável, 10 telas, 6 veículos, pitch + vídeo | Cumprimento do roadmap de sprints | 100% entregas Sprint 3 + 4 | Zero vulnerabilidades críticas OWASP Top 10 | Auditoria concluída — 0 críticos | **Alta** |
 
 ---
 
@@ -33,22 +33,23 @@
 - Identificar lacunas que precisam ser endereçadas no próximo ciclo de produto
 - Tomar decisões de especificação baseadas em dados, não em intuição
 
-**O que a solução entrega:**
-- Dashboard "Comparativo" com até 6 veículos lado a lado
-- Dashboard "Gaps" com análise de capacidades vs. líderes de segmento
-- Dashboard "Score" com radar de pontuação por categoria (motorização, off-road, ADAS, etc.)
-- 50+ atributos extraídos automaticamente com rastreabilidade de fonte
+**O que a solução entrega (implementado):**
+- Tela "Comparativo": até 6 veículos lado a lado com vencedor destacado por atributo — `endpoint POST /api/catalogos/comparar`
+- Tela "Gaps": análise de lacunas de capability vs. líderes de segmento — `CAPABILITY_SCORES` Oracle
+- Tela "Score": radar de pontuação ponderada por categoria (motorização, off-road, ADAS, conectividade, valor)
+- 50+ atributos extraídos automaticamente, cada um com `confianca` (0–1) e `fonte_primaria` rastreável
+- Pipeline de extração: agente ReAct com hierarquia de 5 fontes, executa em < 5 minutos por veículo
 
 **Métricas:**
 
 | Tipo | Indicador | Meta | Como Medir |
 |---|---|---|---|
-| **Negócio** | Horas/ciclo para análise competitiva completa | 80h → < 4h (-95%) | Timestamp Oracle: início extração → relatório disponível |
+| **Negócio** | Horas/ciclo para análise competitiva completa | 80h → < 4h (–95%) | Timestamp Oracle: `data_extracao` início → relatório disponível no app |
 | **Qualidade** | Latência P95 do endpoint `/api/catalogos/comparar` | < 2 segundos | Spring Actuator `/actuator/metrics` |
-| **Negócio** | Número de ciclos de análise por mês | 1/mês → 4+/mês | Contagem de comparações Oracle |
-| **Qualidade** | % atributos corretos vs. PDF oficial | ≥ 90% | Validação manual de amostra 10% |
+| **Negócio** | Número de ciclos de análise por mês | 1/mês → 4+/mês (extração on-demand) | Contagem de `data_extracao` distintos no Oracle |
+| **Qualidade** | % atributos corretos vs. PDF oficial | ≥ 90% | Validação manual de amostra 20% — Sprint 3 |
 
-**Prioridade: ALTA** — impacto direto em decisões de produto.
+**Prioridade: ALTA** — impacto direto em decisões de produto e posicionamento.
 
 ---
 
@@ -61,11 +62,11 @@
 - Entender como concorrentes posicionam seus produtos
 - Criar campanhas baseadas em diferenciais técnicos reais
 
-**O que a solução entrega:**
-- Rankings por perfil de comprador (família, desempenho, off-road, custo-benefício)
-- Análise de gaps: onde o Ranger Raptor lidera e onde perde
-- Chat RAG para responder perguntas ad-hoc ("Qual pickup tem melhor sistema de som?")
-- Timeline de mudanças — saber quando concorrente lança nova versão
+**O que a solução entrega (implementado):**
+- Tela "Score": rankings com scoring determinístico ponderado por perfil — família, desempenho, off-road, custo-benefício
+- Tela "Gaps": onde o Ranger Raptor lidera e onde perde, por categoria de atributo
+- Chat RAG Adaptativo: perguntas ad-hoc em PT-BR ("Qual pickup tem melhor sistema de som?") com classificação automática de tipo de consulta
+- Tela "Timeline": histórico de atualizações de catálogos com `data_extracao` por veículo
 
 **Métricas:**
 
@@ -89,10 +90,10 @@
 - Identificar tendências: quais tecnologias (ADAS, eletrificação, conectividade) estão avançando nos concorrentes
 - Embasar decisões de investimento em R&D com dados de mercado
 
-**O que a solução entrega:**
-- Timeline de todas as atualizações de catálogos (histórico)
-- Comparativo de tendências de atributos ao longo do tempo
-- Score técnico agregado por marca/modelo
+**O que a solução entrega (implementado):**
+- Tela "Timeline": histórico de todas as atualizações de catálogos com `data_extracao` por veículo
+- Comparativo de tendências de atributos ao longo do tempo (baseado em registros históricos do Oracle)
+- Score técnico agregado por marca/modelo para cada perfil de ranking — persistido em `SCORE_COMPETITIVO`
 
 **Métricas:**
 
@@ -116,10 +117,11 @@
 - Comparar Ranger Raptor com concorrentes em tempo real durante atendimento
 - Reduzir tempo de treinamento sobre specs técnicas
 
-**O que a solução entrega:**
-- Chat RAG em português: "Por que o Ranger Raptor é melhor que o Amarok no off-road?"
-- Dashboard de comparação lado a lado acessível no celular
-- Respostas com fontes citadas (credibilidade na venda)
+**O que a solução entrega (implementado):**
+- Chat RAG Adaptativo em PT-BR: "Por que o Ranger Raptor é melhor que o Amarok no off-road?" — classificação automática de pergunta para contexto mais relevante
+- Tela "Comparativo" acessível no celular iOS/Android — interface mobile-first
+- Respostas baseadas exclusivamente em dados extraídos dos catálogos, com fonte citável (credibilidade na venda)
+- Cache de respostas recorrentes com TTL 30 dias — pergunta repetida respondida em < 1 segundo
 
 **Métricas:**
 
@@ -143,12 +145,13 @@
 - Facilidade de integração com sistemas legados
 - Código mantível e com testes
 
-**O que a solução entrega:**
-- REST API com Swagger UI / OpenAPI 3 em `/swagger-ui.html`
-- Autenticação JWT padrão Bearer token
-- Docker Compose para deploy reproduzível
-- Flyway migrations para versionamento de banco
-- Cobertura de testes ≥ 80%
+**O que a solução entrega (implementado):**
+- REST API documentada com Swagger UI / OpenAPI 3 em `/swagger-ui.html`
+- Autenticação JWT padrão Bearer token + RBAC (admin/analista/viewer) implementados no Spring Security
+- Docker Compose com `./start.sh` — setup completo em < 15 minutos em qualquer máquina com Docker
+- Flyway migrations V1–V4 para versionamento de banco Oracle (8 tabelas)
+- Nginx com TLS 1.2/1.3, HSTS e CSP — API exposta via HTTPS por padrão
+- Segurança: AES-256 para dados sensíveis, BCrypt para senhas, `X-Internal-Token` entre serviços
 
 **Métricas:**
 
@@ -172,12 +175,13 @@
 - Garantia de que fontes são públicas e legais
 - Proteção de dados estratégicos da Ford
 
-**O que a solução entrega:**
-- Tabela `CATALOGO_FONTES_SECUNDARIAS` com URL de cada fonte
-- `fonte_primaria` por atributo (ex: "PDF oficial Toyota Hilux BR 2025")
-- RBAC com roles (admin, analista, viewer) — nenhum acesso sem autenticação
-- Audit log de todos os eventos de segurança (tela "Eventos de Segurança")
-- Dados apenas de fontes públicas (catálogos oficiais, FIPE, sites públicos)
+**O que a solução entrega (implementado):**
+- `fonte_primaria` por atributo (ex: "PDF oficial Toyota Hilux BR 2025") — rastreabilidade granular
+- Tabela `CATALOGO_FONTES_SECUNDARIAS` com URL, status (confirma/diverge/complementa) e confiança
+- RBAC implementado no Spring Security: roles admin, analista, viewer — nenhum endpoint acessível sem JWT válido
+- Tabela `EVENTOS_SEGURANCA` no Oracle + tela "Eventos de Segurança" no app — auditoria completa de logins, falhas e acessos
+- Política "null > inventar": dados apenas de fontes públicas verificáveis; dado incerto retorna `null`, nunca valor fabricado
+- Campo `revisado_humano=true` obrigatório antes de qualquer atributo ser publicado externamente
 
 **Métricas:**
 
@@ -201,10 +205,11 @@
 - Justificativa do investimento no POC e eventual produção
 - Potencial de expansão para outros segmentos/regiões
 
-**O que a solução entrega:**
-- Redução mensurável de custo: 76h analista/mês → 4h/mês
-- Custo marginal de extração: ~R$ 0.50 vs. ~R$ 400 (custo hora analista sênior × 80h)
-- Plataforma expansível: novos modelos em horas, não semanas
+**O que a solução entrega (mensurável):**
+- Redução de custo de trabalho manual: 76h analista/mês → < 4h/mês de supervisão — economiza ≥ R$ 7.600/mês ao custo de R$ 100/hora
+- Custo marginal de extração: ~R$ 0,50/ciclo completo (LLM API) vs. ~R$ 8.000/ciclo manual (80h × R$ 100/h)
+- Adição de novo modelo ao catálogo: < 30 minutos de extração automática vs. dias de trabalho manual
+- Plataforma já containerizada e expansível: adicionar novos fabricantes ou mercados não requer reescrita da arquitetura
 
 **Métricas:**
 

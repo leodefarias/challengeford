@@ -1,12 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing } from '../theme';
+import { FontFamily, FontSize, Spacing, ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
 
 interface Props {
   title: string;
 }
 
 export default function SectionTitle({ title }: Props) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>{title}</Text>
@@ -15,18 +19,18 @@ export default function SectionTitle({ title }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorScheme) => StyleSheet.create({
   container: {
     marginBottom: Spacing.sm,
   },
   text: {
     fontFamily: FontFamily.mono,
     fontSize: FontSize.md,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginBottom: Spacing.xs,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.borderLight,
+    backgroundColor: colors.borderLight,
   },
 });

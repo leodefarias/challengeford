@@ -6,38 +6,52 @@
 
 ### Dimensões de Qualidade
 
-| Dimensão | Critério | Meta | Justificativa |
-|---|---|---|---|
-| **Performance** | Latência API P95 (`/comparar`, `/chat`) | < 2 segundos | Uso em reuniões — espera > 2s quebra fluxo |
-| **Performance** | Extração completa de catálogo (~50 attrs) | < 5 minutos | Extração on-demand tolerável até 5 min |
-| **Performance** | Chat RAG (cache hit) | < 1 segundo | Respostas recorrentes devem ser instantâneas |
-| **Disponibilidade** | Uptime mensal | ≥ 99% | ~7h downtime/mês tolerado |
-| **Acurácia** | % atributos corretos vs. PDF oficial | ≥ 90% | Abaixo disso, dado não é confiável para decisão |
-| **Confiabilidade** | % atributos com fonte rastreável | 100% | Requisito compliance — zero atributo sem origem |
-| **Segurança** | Autenticação JWT | Expiração 8h, RBAC por role | Acesso mínimo necessário por perfil |
-| **Usabilidade** | Task completion rate (sem suporte) | ≥ 85% | Usuários devem operar sem treinamento extenso |
-| **Manutenibilidade** | Cobertura de testes automatizados | ≥ 80% | Mudanças futuras sem regressão |
-| **Portabilidade** | Setup em nova máquina | < 15 minutos via Docker | Demonstrações em máquinas externas |
+| Dimensão | Critério | Meta | Status Sprint 3 | Justificativa |
+|---|---|---|---|---|
+| **Performance** | Latência API P95 (`/comparar`, `/chat`) | < 2 segundos | Meta definida | Uso em reuniões — espera > 2s quebra fluxo |
+| **Performance** | Extração completa de catálogo (~50 attrs) | < 5 minutos | Meta definida | Extração on-demand tolerável até 5 min |
+| **Performance** | Chat RAG (cache hit) | < 1 segundo | CHAT_CACHE implementado | Respostas recorrentes devem ser instantâneas |
+| **Disponibilidade** | Uptime mensal | ≥ 99% | Docker restart policies ativas | ~7h downtime/mês tolerado |
+| **Acurácia** | % atributos corretos vs. PDF oficial | ≥ 90% | Validação em andamento | Abaixo disso, dado não é confiável para decisão |
+| **Confiabilidade** | % atributos com fonte rastreável | 100% | `fonte_primaria` implementado | Requisito compliance — zero atributo sem origem |
+| **Segurança** | Autenticação JWT + RBAC | Expiração 8h, 3 roles | Entregue | Acesso mínimo necessário por perfil |
+| **Segurança** | Criptografia de dados sensíveis | AES-256 em repouso | Entregue | Proteção de dados estratégicos da Ford |
+| **Segurança** | Proteção de senhas | BCrypt | Entregue | Padrão OWASP para armazenamento de credenciais |
+| **Segurança** | Proteção contra força bruta | Rate Limiting 100 req/min por IP | Entregue | Resistência a ataques automatizados |
+| **Segurança** | Sanitização de entrada | SQL Injection + XSS filtrados | Entregue | `InputSanitizer.java` — OWASP A03 |
+| **Segurança** | Auditoria de acessos | `EVENTOS_SEGURANCA` 100% dos eventos | Entregue | Requisito compliance e rastreabilidade |
+| **Segurança** | Headers de segurança HTTP | X-Content-Type, X-Frame-Options, CSP | Entregue | Python middleware + Nginx config |
+| **Usabilidade** | Task completion rate (sem suporte) | ≥ 85% | 10 telas implementadas | Usuários devem operar sem treinamento extenso |
+| **Manutenibilidade** | Cobertura de testes automatizados | ≥ 80% | Em finalização | Mudanças futuras sem regressão |
+| **Portabilidade** | Setup em nova máquina | < 15 minutos via Docker | `./start.sh` funcional | Demonstrações em máquinas externas |
 
 ### Critérios de Aceitação por Módulo
 
-**Mobile App (React Native):**
+**Mobile App (React Native) — 10 telas implementadas:**
 - Todas as 10 telas funcionais sem crash em iOS e Android
-- Navegação bottom tabs responsiva
-- Autenticação JWT com refresh automático
-- Exibição correta de atributos `null` (não ocultar, exibir "Não disponível")
+- Navegação bottom tabs responsiva com design system consistente (design tokens em `theme/index.ts`)
+- Autenticação JWT com interceptor automático no axios (renova token expirado)
+- Exibição correta de atributos `null` (exibe "Não disponível" — nunca oculta lacunas)
 
-**Java API (Spring Boot):**
-- Todos os endpoints documentados no Swagger UI
+**Java API (Spring Boot) — controles de segurança entregues:**
+- Todos os endpoints documentados no Swagger UI (OpenAPI 3)
 - Respostas com HTTP status code correto (200, 201, 400, 401, 403, 404, 500)
-- Rate limiting ativo (máx. 100 req/min por IP)
-- Idempotência: mesma extração não gera duplicata no Oracle
+- Rate limiting ativo: máx. 100 req/min por IP (`RateLimitFilter.java`)
+- JWT com expiração de 8 horas, validação de assinatura HMAC-SHA256, RBAC por role (admin/analista/viewer)
+- AES-256 para criptografia de dados sensíveis em repouso (`EncryptedStringConverter.java`)
+- BCrypt para hash de senhas (custo configurável)
+- `InputSanitizer.java` contra SQL Injection e XSS em todos os campos de entrada texto
+- `X-Idempotency-Key`: mesma extração não gera duplicata no Oracle
 
-**Python AI Service (FastAPI):**
-- Agente ReAct executa fallback hierárquico automaticamente
-- Validação Pydantic rejeita dados fora de range sem lançar exceção não tratada
-- ChromaDB inicializa idempotentemente (script `01_seed_kb.py`)
-- Custo máximo por extração: $0.20 (Claude API)
+**Python AI Service (FastAPI) — pipeline implementado:**
+- Agente ReAct executa fallback hierárquico de 5 fontes automaticamente: PDF → Playwright → Firecrawl → iCarros → FIPE
+- Validação Pydantic v2 rejeita dados fora de range sem lançar exceção não tratada
+- ChromaDB inicializa idempotentemente via script `01_seed_kb.py`
+- RAG Adaptativo: classifica pergunta como factual / comparação / recomendação e usa estratégia de contexto específica
+- Rate Limiting: 5 req/min para extração, 10/min para chat, 30/min para listagem (slowapi)
+- Autenticação de serviço a serviço: `X-Internal-Token` com `hmac.compare_digest` (resistente a timing attack)
+- Headers de segurança HTTP em middleware: `X-Content-Type-Options`, `X-Frame-Options`, `CSP`, `Referrer-Policy`
+- Custo controlado: CHAT_CACHE (TTL 30 dias) reduz chamadas LLM recorrentes; idempotência evita reprocessamento
 
 ---
 
@@ -47,14 +61,14 @@
 
 | # | Risco | Probabilidade | Impacto | Nível | Mitigação |
 |---|---|---|---|---|---|
-| R1 | Sites fabricadores bloqueiam scraping (bot detection) | **Alta** | **Alto** | Crítico | Playwright stealth + Firecrawl fallback + PDFs como fonte primária sempre disponível |
+| R1 | Sites fabricadores bloqueiam scraping (bot detection) | **Alta** | **Alto** | Crítico | Hierarquia de 5 fontes implementada: PDF oficial (sempre disponível) → Playwright → Firecrawl → iCarros → FIPE |
 | R2 | LLM alucina valores de atributos (ex: inventa potência) | **Média** | **Crítico** | Crítico | Validação Pydantic pós-LLM + ranges hardcoded + campo `confianca` + revisão humana |
 | R3 | Mudança de layout nos sites de fabricantes quebra scrapers | **Alta** | **Médio** | Alto | Múltiplas estratégias de extração; fallback hierárquico; alertas de falha |
 | R4 | Oracle FIAP indisponível (manutenção/instabilidade) | **Média** | **Alto** | Alto | ChromaDB como cache de leitura; extração pode rodar e retornar sem persistir |
 | R5 | Custo LLM excede orçamento do projeto | **Média** | **Médio** | Médio | CHAT_CACHE 30d TTL; OpenAI fallback mais barato; extração idempotente (sem duplicatas) |
 | R6 | Dados desatualizados (catálogo mudou, sistema não detectou) | **Média** | **Alto** | Alto | Timeline de atualizações com `data_extracao`; política de re-extração periódica |
-| R7 | Vazamento de dados estratégicos da Ford | **Baixa** | **Crítico** | Alto | RBAC + JWT + AES-256 + rate limiting + audit log completo |
-| R8 | Dependência única da Anthropic API (indisponibilidade) | **Baixa** | **Alto** | Médio | Fallback automático para OpenAI GPT-4 via `LLM_PROVIDER` env var |
+| R7 | Vazamento de dados estratégicos da Ford | **Baixa** | **Crítico** | Alto | RBAC (3 roles) + JWT (8h) + AES-256 + BCrypt + Rate Limiting + audit log `EVENTOS_SEGURANCA` + Nginx TLS 1.2/1.3 |
+| R8 | Dependência de provedor único de LLM (indisponibilidade) | **Baixa** | **Alto** | Médio | Troca de provedor via `LLM_PROVIDER` env var — sem alteração de código |
 | R9 | Dados de concorrente incorretos publicados em campanha Ford | **Baixa** | **Crítico** | Alto | Campo `revisado_humano=true` obrigatório para publicação; política "null > inventar" |
 | R10 | Crescimento de volume (mais modelos) degrada performance | **Baixa** | **Médio** | Baixo | ChromaDB escala horizontalmente; CHAT_CACHE absorve consultas recorrentes |
 
@@ -67,10 +81,10 @@
 **Impacto técnico:** Pipeline agente quebra na etapa Playwright/Firecrawl.
 
 **Mitigação implementada:**
-- Hierarquia de fontes: PDF oficial (mais estável) → Playwright → Firecrawl → iCarros → FIPE → YouTube
-- PDFs oficiais são baixados e armazenados localmente (não dependem de scraping em tempo real)
-- Firecrawl (pago) tem capacidade anti-bot profissional como fallback
-- Campo `fonte_primaria` registra qual método conseguiu extrair
+- Hierarquia de 5 fontes: PDF oficial (mais estável, armazenado localmente) → Playwright headless → Firecrawl (anti-bot profissional, pago) → iCarros → FIPE API pública
+- PDFs oficiais são baixados e armazenados localmente — disponíveis mesmo sem acesso à internet dos fabricantes
+- Firecrawl (pago) tem capacidade anti-bot profissional como 3ª camada de fallback
+- Campo `fonte_primaria` registra qual método conseguiu extrair cada atributo — rastreabilidade total da cadeia
 
 **Indicador de alerta:** Taxa de falha de extração > 20% em uma semana → revisar scrapers.
 
@@ -123,7 +137,7 @@
 
 | Métrica | Indicador | Linha de Base (AS-IS) | Meta (TO-BE) | Ferramenta de Medição |
 |---|---|---|---|---|
-| **Tempo de análise competitiva** | Horas por ciclo completo (6 veículos) | 80h/mês | < 4h/mês (-95%) | Timestamp `data_extracao` Oracle |
+| **Tempo de análise competitiva** | Horas por ciclo completo (6 veículos) | 80h/mês | < 4h/mês (–95%) | Timestamp `data_extracao` Oracle |
 | **Acurácia de extração** | % atributos corretos vs. PDF oficial | N/A (manual) | ≥ 90% | Validação manual de amostra 10% por sprint |
 | **Cobertura de catálogo** | % atributos preenchidos por veículo (`cobertura_pct`) | N/A | ≥ 85% | `SELECT AVG(cobertura_pct) FROM CATALOGOS` |
 | **Detecção de mudanças** | Horas entre publicação fabricante e detecção | 30 dias (ciclo manual) | < 24h | Comparar `data_extracao` vs. data publicação |
@@ -150,12 +164,18 @@
 
 ### Métricas de Segurança
 
-| Métrica | Indicador | Meta | Medido por |
-|---|---|---|---|
-| **Vulnerabilidades críticas** | OWASP Top 10 sem falhas críticas | 0 críticos | Relatório de auditoria Sprint 3 |
-| **Cobertura de testes** | % código coberto por testes automatizados | ≥ 80% | JaCoCo (Java) + pytest-cov (Python) |
-| **Acessos não autorizados** | Tentativas de acesso sem JWT válido logadas | 100% logadas | Tela "Eventos de Segurança" |
-| **Tempo de resposta a incidente** | SLA de resposta para incidentes de segurança | < 4 horas | Log de incidentes |
+| Métrica | Indicador | Meta | Status Sprint 3 | Medido por |
+|---|---|---|---|---|
+| **Vulnerabilidades críticas** | OWASP Top 10 sem falhas críticas | 0 críticos | Auditoria concluída | Relatório de auditoria Sprint 3 |
+| **JWT + RBAC** | Autenticação e autorização por role | 100% endpoints protegidos | Implementado | Spring Security config + testes de integração |
+| **Criptografia** | AES-256 em dados sensíveis + BCrypt em senhas | 100% dos campos sensíveis | Implementado | `EncryptedStringConverter.java` + `BCrypt` |
+| **Rate Limiting** | Máx. requisições por IP por minuto | 100 req/min Java; 5–30 req/min Python | Implementado | `RateLimitFilter.java` + `slowapi` |
+| **Input Sanitization** | Proteção contra SQL Injection e XSS | 100% campos de entrada | Implementado | `InputSanitizer.java` |
+| **Audit Log** | Eventos de segurança registrados | 100% eventos logados | Implementado | Tabela `EVENTOS_SEGURANCA` + tela no app |
+| **Headers de Segurança HTTP** | X-Content-Type, X-Frame-Options, CSP | Presentes em todas as respostas | Implementado | Python middleware + Nginx config |
+| **Cobertura de testes** | % código coberto por testes automatizados | ≥ 80% Java; ≥ 75% Python | Em finalização | JaCoCo (Java) + pytest-cov (Python) |
+| **Acessos não autorizados** | Tentativas de acesso sem JWT válido logadas | 100% logadas | Implementado | Tela "Eventos de Segurança" |
+| **Tempo de resposta a incidente** | SLA de resposta para incidentes de segurança | < 4 horas | Processo definido | Log de incidentes + tela "Eventos de Segurança" |
 
 ### Métricas de Negócio (ROI)
 

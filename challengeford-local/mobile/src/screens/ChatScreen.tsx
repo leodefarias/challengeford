@@ -10,7 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing, Radius } from '../theme';
+import { FontFamily, FontSize, Spacing, Radius, ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
 import Navbar from '../components/Navbar';
 import { chat } from '../services/api';
 import { sanitizeInput } from '../utils/sanitize';
@@ -49,7 +50,8 @@ const INITIAL_MESSAGES: Message[] = [
   },
 ];
 
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({ message, colors }: { message: Message; colors: ColorScheme }) {
+  const styles = makeStyles(colors);
   const isUser = message.role === 'user';
   return (
     <View style={[styles.messageRow, isUser && styles.messageRowUser]}>
@@ -71,6 +73,9 @@ function MessageBubble({ message }: { message: Message }) {
 }
 
 export default function ChatScreen() {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -115,7 +120,7 @@ export default function ChatScreen() {
           ref={listRef}
           data={messages}
           keyExtractor={(m) => m.id}
-          renderItem={({ item }) => <MessageBubble message={item} />}
+          renderItem={({ item }) => <MessageBubble message={item} colors={colors} />}
           contentContainerStyle={styles.listContent}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
           showsVerticalScrollIndicator={false}
@@ -129,7 +134,7 @@ export default function ChatScreen() {
             value={input}
             onChangeText={setInput}
             placeholder="Pergunte sobre specs, comparativos ou posicionamento..."
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             multiline
             maxLength={500}
             returnKeyType="send"
@@ -144,8 +149,8 @@ export default function ChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: ColorScheme) => StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   titleRow: {
     paddingHorizontal: Spacing.md,
@@ -155,7 +160,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FontFamily.displayBold,
     fontSize: FontSize.lg,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   listContent: {
     paddingHorizontal: Spacing.sm,
@@ -174,27 +179,27 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: Colors.cardLight,
+    backgroundColor: colors.cardLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   aiAvatarText: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.lg,
-    color: Colors.accentBlue,
+    color: colors.accentBlue,
   },
   userAvatar: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: Colors.cardLight,
+    backgroundColor: colors.cardLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   userAvatarText: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize['2xl'],
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   bubble: {
     maxWidth: '75%',
@@ -202,27 +207,27 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
   },
   bubbleAI: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.38)',
+    borderColor: colors.borderLight,
   },
   bubbleUser: {
-    backgroundColor: Colors.accentBlue,
+    backgroundColor: colors.accentBlue,
     borderRadius: 12,
   },
   bubbleText: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.sm,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 16,
   },
   bubbleTextUser: {
-    color: Colors.textPrimary,
+    color: '#f2f2f2',
   },
   loadingText: {
     fontFamily: FontFamily.sansRegular,
     fontSize: FontSize.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     paddingHorizontal: Spacing.base,
     paddingBottom: Spacing.sm,
     fontStyle: 'italic',
@@ -236,17 +241,17 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: Colors.cardLight,
+    backgroundColor: colors.cardLight,
     borderRadius: 10,
     paddingHorizontal: Spacing.md,
     paddingVertical: 10,
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.sm,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     maxHeight: 100,
   },
   sendBtn: {
-    backgroundColor: Colors.accentBlue,
+    backgroundColor: colors.accentBlue,
     borderRadius: 11,
     paddingHorizontal: Spacing.base,
     paddingVertical: 10,
@@ -255,6 +260,6 @@ const styles = StyleSheet.create({
   sendText: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    color: '#f2f2f2',
   },
 });

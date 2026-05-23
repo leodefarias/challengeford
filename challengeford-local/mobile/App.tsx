@@ -14,9 +14,11 @@ import {
   Syne_700Bold,
 } from '@expo-google-fonts/syne';
 import AppNavigator from './src/navigation/AppNavigator';
-import { Colors } from './src/theme';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 
-export default function App() {
+function Root() {
+  const { mode, colors } = useTheme();
+
   const [fontsLoaded] = useFonts({
     DMMono_500Medium,
     DMSans_400Regular,
@@ -28,16 +30,24 @@ export default function App() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={Colors.accentBlue} />
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors.accentBlue} />
       </View>
     );
   }
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <AppNavigator />
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <Root />
+    </ThemeProvider>
   );
 }

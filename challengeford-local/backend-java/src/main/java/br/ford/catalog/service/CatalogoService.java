@@ -64,9 +64,9 @@ public class CatalogoService {
         PythonCatalogoDTO dto = resultado.getCatalogo();
         Map<String, Object> schema = dto.getSchema();
 
-        String marca  = (String) schema.getOrDefault("marca", "");
-        String modelo = (String) schema.getOrDefault("modelo", "");
-        String versao = (String) schema.getOrDefault("versao", "");
+        String marca  = ((String) schema.getOrDefault("marca", "")).trim().toLowerCase();
+        String modelo = ((String) schema.getOrDefault("modelo", "")).trim().toLowerCase();
+        String versao = ((String) schema.getOrDefault("versao", "")).trim().toLowerCase();
 
         CatalogoEntity catalogo = catalogoRepository
                 .findByMarcaAndModeloAndVersao(marca, modelo, versao)

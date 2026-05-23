@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
+import { navigationRef } from './navigationRef';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
-import { Colors, FontFamily, FontSize } from '../theme';
+import { Text, View, ActivityIndicator } from 'react-native';
+import { getItem } from '../utils/storage';
+import { FontFamily, FontSize } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
 
 import HomeScreen from '../screens/HomeScreen';
 import ComparativoScreen from '../screens/ComparativoScreen';
@@ -39,18 +41,19 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
 }
 
 function MainTabs() {
+  const { colors } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.card,
-          borderTopColor: Colors.borderLight,
+          backgroundColor: colors.card,
+          borderTopColor: colors.borderLight,
           borderTopWidth: 1,
           height: 60,
         },
-        tabBarActiveTintColor: Colors.accentBlue,
-        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarActiveTintColor: colors.accentBlue,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: {
           fontFamily: FontFamily.sansSemiBold,
           fontSize: FontSize.sm,
@@ -88,23 +91,33 @@ function MainTabs() {
 }
 
 export default function AppNavigator() {
+  const { colors } = useTheme();
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
 
   useEffect(() => {
-    SecureStore.getItemAsync('jwt_token').then(token => {
-      setInitialRoute(token ? 'MainTabs' : 'Login');
-    });
+    getItem('jwt_token')
+      .then(token => setInitialRoute(token ? 'MainTabs' : 'Login'))
+      .catch(() => setInitialRoute('Login'));
   }, []);
 
-  if (!initialRoute) return null;
+  if (!initialRoute) return (
+    <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+      <ActivityIndicator color={colors.accentBlue} />
+    </View>
+  );
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         initialRouteName={initialRoute}
         screenOptions={{
           headerShown: false,
-          cardStyle: { backgroundColor: Colors.background },
+          cardStyle: { backgroundColor: colors.background },
+          cardStyleInterpolator: CardStyleInterpolators.forFadeFromCenter,
+          transitionSpec: {
+            open: { animation: 'timing', config: { duration: 250 } },
+            close: { animation: 'timing', config: { duration: 200 } },
+          },
         }}
       >
         <Stack.Screen name="Login" component={LoginScreen} />

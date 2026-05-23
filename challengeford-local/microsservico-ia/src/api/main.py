@@ -3,8 +3,9 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+import logging.config
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -24,6 +25,31 @@ from config import VALIDATED_DIR
 from knowledge_base.kb_manager import KBManager
 from schema import CatalogoSchema, ATRIBUTOS_CORE, MarcaEnum
 
+# ---------------------------------------------------------------------------
+# Logging estruturado JSON (rastreabilidade por trace_id)
+# ---------------------------------------------------------------------------
+
+class _JsonFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        payload = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "trace_id": getattr(record, "trace_id", None),
+        }
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+        return json.dumps(payload, ensure_ascii=False)
+
+logging.config.dictConfig({
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"json": {"()": _JsonFormatter}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json"}},
+    "root": {"level": "INFO", "handlers": ["console"]},
+})
+
 logger = logging.getLogger(__name__)
 
 _INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY")
@@ -34,14 +60,17 @@ _ALLOWED_ORIGINS = [
     "http://java-api:8080",
 ]
 
+_APP_ENV = os.getenv("APP_ENV", "production")
+
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="Ford Catálogos IA",
     description="API de extração e análise competitiva de catálogos automotivos — mercado BR",
     version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if _APP_ENV == "development" else None,
+    redoc_url="/redoc" if _APP_ENV == "development" else None,
+    openapi_url="/openapi.json" if _APP_ENV == "development" else None,
 )
 
 app.state.limiter = limiter
@@ -50,14 +79,26 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
-    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Authorization", "Content-Type", "X-Internal-Token"],
 )
 
 
 @app.middleware("http")
+async def security_headers(request: Request, call_next) -> Response:
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = "default-src 'self'"
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.middleware("http")
 async def verify_internal_token(request: Request, call_next) -> Response:
-    if request.url.path in ("/health", "/docs", "/redoc", "/openapi.json"):
+    if request.url.path == "/health":
         return await call_next(request)
     if _INTERNAL_API_KEY:
         token = request.headers.get("X-Internal-Token", "")
@@ -743,12 +784,66 @@ async def ranking(request: Request, req: RankingRequest):
 # Startup
 # ---------------------------------------------------------------------------
 
+def _seed_validated_from_seed_files() -> None:
+    """Popula data/validated/ a partir dos JSONs de seed se ainda não processados.
+    Permite que ranking/comparar/chat funcionem sem extração via LLM."""
+    from config import SEED_DIR
+    if not SEED_DIR.exists():
+        return
+    VALIDATED_DIR.mkdir(parents=True, exist_ok=True)
+    for seed_file in sorted(SEED_DIR.glob("*.json")):
+        try:
+            schema: dict = json.loads(seed_file.read_text(encoding="utf-8"))
+            marca = schema.get("marca", "")
+            modelo = schema.get("modelo", "")
+            versao = schema.get("versao", "")
+            key = _catalogo_key(marca, modelo, versao)
+            validated_path = VALIDATED_DIR / f"{key}.json"
+            if validated_path.exists():
+                continue
+            metadados = {
+                k: {
+                    "valor": (", ".join(str(i) for i in v) if isinstance(v, list) else v),
+                    "confianca": 0.95,
+                    "fonte_primaria": "seed",
+                    "mercado_confirmado_br": True,
+                    "divergente": False,
+                    "schema_nivel": "core",
+                }
+                for k, v in schema.items()
+                if k not in ("marca", "modelo", "versao", "ano_modelo", "segmento")
+            }
+            resultado = {
+                "catalogo": {
+                    "schema": schema,
+                    "cobertura_pct": 0.80,
+                    "cobertura_live_pct": None,
+                    "status": "completo",
+                    "data_extracao": datetime.now().isoformat(),
+                    "fontes_utilizadas": ["seed"],
+                    "metadados": metadados,
+                },
+                "termos_desconhecidos": [],
+                "gaps_restantes": [],
+                "log_decisoes": ["Carregado do arquivo seed — dados pré-validados"],
+            }
+            validated_path.write_text(
+                json.dumps(resultado, indent=2, default=str, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            logger.info("Seed migrado para validated/: %s", key)
+        except Exception as exc:
+            logger.warning("Falha ao migrar seed %s: %s", seed_file.name, exc)
+
+
 @app.on_event("startup")
 async def startup():
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s — %(message)s",
     )
+    logger.info("API iniciando — migrando seeds para validated/...")
+    _seed_validated_from_seed_files()
     logger.info("API iniciando — inicializando KB...")
     get_kb()
     logger.info("API pronta.")

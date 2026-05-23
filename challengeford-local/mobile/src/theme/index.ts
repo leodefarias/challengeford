@@ -1,4 +1,4 @@
-export const Colors = {
+export const DarkColors = {
   background: '#0d0f14',
   card: '#13161e',
   cardLight: '#1e2230',
@@ -9,6 +9,23 @@ export const Colors = {
   border: '#a9a9a9',
   borderLight: '#2a2e3d',
 };
+
+export const LightColors = {
+  background: '#f0f2f5',
+  card: '#ffffff',
+  cardLight: '#e4e8f0',
+  textPrimary: '#0d0f14',
+  textMuted: '#6b7280',
+  accentBlue: '#2d6ef6',
+  accentGreen: '#16a34a',
+  border: '#d1d5db',
+  borderLight: '#e5e7eb',
+};
+
+export type ColorScheme = typeof DarkColors;
+
+// Kept for backward-compat with module-level constants that can't use hooks
+export const Colors = DarkColors;
 
 export const FontFamily = {
   mono: 'DMMono_500Medium',

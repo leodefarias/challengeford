@@ -1,5 +1,6 @@
 package br.ford.catalog.domain.entity;
 
+import br.ford.catalog.security.EncryptedStringConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,7 +32,8 @@ public class UsuarioEntity implements UserDetails {
     @Column(name = "SENHA_HASH", nullable = false, length = 200)
     private String senhaHash;
 
-    @Column(name = "NOME", length = 200)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "NOME", length = 512)
     private String nome;
 
     @Enumerated(EnumType.STRING)

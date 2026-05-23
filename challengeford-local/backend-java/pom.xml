@@ -87,6 +87,7 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+
         <!-- Swagger / OpenAPI 3 -->
         <dependency>
             <groupId>org.springdoc</groupId>

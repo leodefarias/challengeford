@@ -11,7 +11,11 @@ import java.util.Optional;
 @Repository
 public interface CatalogoRepository extends JpaRepository<CatalogoEntity, Long> {
 
-    Optional<CatalogoEntity> findByMarcaAndModeloAndVersao(String marca, String modelo, String versao);
+    Optional<CatalogoEntity> findByMarcaIgnoreCaseAndModeloIgnoreCaseAndVersaoIgnoreCase(String marca, String modelo, String versao);
+
+    default Optional<CatalogoEntity> findByMarcaAndModeloAndVersao(String marca, String modelo, String versao) {
+        return findByMarcaIgnoreCaseAndModeloIgnoreCaseAndVersaoIgnoreCase(marca, modelo, versao);
+    }
 
     Optional<CatalogoEntity> findByMarcaAndModeloAndVersaoAndAnoModelo(
             String marca, String modelo, String versao, Integer anoModelo);

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Colors, FontFamily, FontSize } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
 
 interface Props {
   value: number;
@@ -18,10 +19,12 @@ export default function CircularProgress({
   max = 100,
   size = 70,
   strokeWidth = 6,
-  color = Colors.accentBlue,
+  color,
   labelSize = FontSize.xl,
   showPercent = false,
 }: Props) {
+  const { colors } = useTheme();
+  const resolvedColor = color ?? colors.accentBlue;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = Math.min(value / max, 1);
@@ -34,7 +37,7 @@ export default function CircularProgress({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={Colors.cardLight}
+          stroke={colors.cardLight}
           strokeWidth={strokeWidth}
           fill="none"
         />
@@ -42,7 +45,7 @@ export default function CircularProgress({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={color}
+          stroke={resolvedColor}
           strokeWidth={strokeWidth}
           fill="none"
           strokeDasharray={`${circumference} ${circumference}`}
@@ -53,11 +56,11 @@ export default function CircularProgress({
         />
       </Svg>
       <View style={{ alignItems: 'center' }}>
-        <Text style={{ fontFamily: FontFamily.sansBold, fontSize: labelSize, color }}>
+        <Text style={{ fontFamily: FontFamily.sansBold, fontSize: labelSize, color: resolvedColor }}>
           {value}
         </Text>
         {showPercent && (
-          <Text style={{ fontFamily: FontFamily.sansBold, fontSize: FontSize.md, color }}>
+          <Text style={{ fontFamily: FontFamily.sansBold, fontSize: FontSize.md, color: resolvedColor }}>
             %
           </Text>
         )}

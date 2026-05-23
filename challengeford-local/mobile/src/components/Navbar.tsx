@@ -1,16 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, Image, Animated, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Colors, FontFamily, FontSize, Spacing } from '../theme';
+import { FontFamily, FontSize, Spacing, ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
+import { navigationRef } from '../navigation/navigationRef';
 
 interface Props {
   userName?: string;
   avatarUri?: string;
-  onNotificationPress?: () => void;
 }
 
-export default function Navbar({ userName, avatarUri, onNotificationPress }: Props) {
+export default function Navbar({ userName, avatarUri }: Props) {
+  const { colors } = useTheme();
   const [resolvedName, setResolvedName] = useState(userName ?? '');
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(-16)).current;
 
   useEffect(() => {
     if (!userName) {
@@ -21,8 +25,18 @@ export default function Navbar({ userName, avatarUri, onNotificationPress }: Pro
       setResolvedName(userName);
     }
   }, [userName]);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 400, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  const styles = makeStyles(colors);
+
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity, transform: [{ translateY }] }]}>
       <View style={styles.profile}>
         <View style={styles.avatar}>
           {avatarUri ? (
@@ -38,14 +52,19 @@ export default function Navbar({ userName, avatarUri, onNotificationPress }: Pro
           <Text style={styles.userName}>{resolvedName || '...'}</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.notificationBtn} onPress={onNotificationPress}>
-        <Text style={styles.bellIcon}>🔔</Text>
+
+      <TouchableOpacity
+        style={styles.menuBtn}
+        onPress={() => navigationRef.current?.navigate('DrawerMenu' as never)}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Text style={styles.menuIcon}>☰</Text>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorScheme) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -72,14 +91,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.accentBlue,
+    backgroundColor: colors.accentBlue,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarInitial: {
     fontFamily: FontFamily.sansBold,
     fontSize: FontSize.lg,
-    color: Colors.textPrimary,
+    color: '#f2f2f2',
   },
   greeting: {
     gap: 2,
@@ -87,22 +106,23 @@ const styles = StyleSheet.create({
   greetingText: {
     fontFamily: FontFamily.sansRegular,
     fontSize: FontSize.md,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   userName: {
     fontFamily: FontFamily.sansBold,
     fontSize: FontSize.lg,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
-  notificationBtn: {
+  menuBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.cardLight,
+    backgroundColor: colors.cardLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bellIcon: {
+  menuIcon: {
     fontSize: 18,
+    color: colors.textPrimary,
   },
 });

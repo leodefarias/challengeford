@@ -1,0 +1,330 @@
+## Slide 1
+
+CHALLENGE
+
+---
+
+## Slide 2
+
+### Challenge any%
+
+* Missão: Blindar o Challenge da Ford
+* Dificuldade: sim
+* objetivo: 100 pontos de security
+* Impedimento: Blue Team
+
+---
+
+## Slide 3
+
+### Conteúdo
+
+* As primeiras splits
+* O Crachá de Acesso
+* A Blindagem
+* O Cofre
+* A Caixa Preta
+
+---
+
+## Slide 4
+
+as primeiras splits
+
+---
+
+## Slide 5
+
+### Validação vs Sanitização
+
+```html
+<script>alert('xss')</script>@hackerdasilva.com
+```
+
+Validação sanitização
+
+---
+
+## Slide 6
+
+### Validação 101
+
+* O que validar?
+
+  * Tipagem - Está escrito de forma correta?
+  * Presença - Existe o caractere obrigatório "x"?
+  * Tamanho - O tamanho é real?
+* campos: E-mail, Marca, Modelo, Versão...
+
+---
+
+## Slide 7
+
+### sanitização 101
+
+* O que validar?
+
+  * caracteres epeciais (escapar caracteres)
+  * ' - sqli
+  * `<script>` - xss
+* a regra do jogo: "nunca confie no que vem do teclado do usuário!"
+
+sqli
+xss
+
+---
+
+## Slide 8
+
+### Normalização de API
+
+* fOrD == FORD == ford == forD == Ford == fOrd (...)
+* utilizem enums para marca e modelo!
+
+  * classes modelo com respostas fixas!
+* Normalização é chave para o desafio 1
+
+---
+
+## Slide 9
+
+### buffer overflow & flooding
+
+buffer overflow
+vs
+flooding
+
+```txt
+buffer
+AAAAAAAAAAAAAAAComando_pica ->
+código->
+=
+```
+
+```txt
+buffer
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAaAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa ->
+código->
+=
+```
+
+---
+
+## Slide 10
+
+### Tratamento seguro de erros
+
+* Erro 500 -> internal server error (tranquilidade)
+* erro 500 -> sql querry failed (kkkkkkkkkkkkkkkk)
+* esconda stack traces e tecnologias
+
+---
+
+## Slide 11
+
+O Crachá de acesso
+
+---
+
+## Slide 12
+
+### jwt
+
+* json wEb token
+* header: algoritmo
+* Payload: dados (sem secret!!!!!)
+* signature: selo de autenticidade
+
+---
+
+## Slide 13
+
+### oauth2 & bearer tokens
+
+* beaber: o "dono" do "poder"
+
+  * authorization header: bearer `<token>`
+* expiração do token é obrigatória
+* impede alteração sem autenticação
+* facilita o controle de acesso
+
+---
+
+## Slide 14
+
+### rbac
+
+* role based access control
+* admin: configurações globais
+* analista (Ford): leads e dashboard
+* user: dados pessoais (unitário)
+
+---
+
+## Slide 15
+
+a blindagem (da ranger?)
+
+---
+
+## Slide 16
+
+### http vs https
+
+* tls 1.2 -> túnel
+* criptografia assimétrica
+
+  * pública
+  * privada
+* sem https = Sniffing de dados
+
+```txt
+Server
+pub
+pub
+priv
+priv
+Client
+```
+
+---
+
+## Slide 17
+
+### idempotency keys
+
+* Rate limitng: evita Denial of service e ataques repetitivos
+* idempotency key: garante que o clique duplo não crie 2 leads
+* requisição deve ser assinada com um token único
+
+  * muitos tokens de uma pessoa = block
+  * token duplo = apenas um é realizado
+
+---
+
+## Slide 18
+
+### "cors" correto
+
+* cross-origin resource sharing
+* access-control-allow-origin
+* nunca use *
+* allow *
+* bônus: nunca use "import x" no python
+
+  * é feio e impratico e ruim e tosco e desajeitado e paia e zoado e péssimo e esquisito e fedido
+
+---
+
+## Slide 19
+
+o cofre
+
+---
+
+## Slide 20
+
+### criptografia em repouso
+
+* dado no db != dado legível
+* aes-256 para dados sensíveis
+* bcrypt para senhas
+* não utilize criptografias "resolvidas" (des e md5)
+
+---
+
+## Slide 21
+
+### retenção e descarte
+
+* dado guardado = risco guardado
+* política de retenção (lgpd)
+* Anonimização vs deleção física
+* o que é anonimização?
+
+---
+
+## Slide 22
+
+### pseudoanonimização
+
+* anonimizar é irreversível
+* pseudo - derivado do grego pseudḗs (ψευδής)
+* trocar o nome por id ou separar tabelas e guardar a junction table
+* reversível através de chaves, códigos ou informação externa
+* bom para se utilizar em ml e dashboards (vin share)
+
+---
+
+## Slide 23
+
+### exposição acidental
+
+* cuidado com o .env
+* logs que gravam senhas
+* endpoints de teste esquecidos
+* logs que preservam a stack / "visão do dev"
+
+---
+
+## Slide 24
+
+a caixa preta
+
+---
+
+## Slide 25
+
+### logging estruturado
+
+* logs em json (winston/pino)
+* rastreabilidade (trace id)
+* "quem fez o quê, quando e onde?"
+
+---
+
+## Slide 26
+
+### Monitoramento de Eventos
+
+* dashboards de erros 5xx - erros do servidor
+* alertas de brute force
+* identificação de comportamento suspeito
+* honey pots
+* audit trail para ações críticas
+
+---
+
+## Slide 27
+
+ggwp!
+
+---
+
+## Slide 28
+
+### achievment unlocked!
+
+* resultado da missão: sucesso!
+* status ford: safe do safe
+* status projeto: protegido contra script kiddies e bots

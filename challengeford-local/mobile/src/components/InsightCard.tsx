@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing, Radius } from '../theme';
+import { FontFamily, FontSize, Spacing, Radius, ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
 
 interface Props {
   header?: string;
@@ -9,6 +10,9 @@ interface Props {
 }
 
 export default function InsightCard({ header, body, highlight = false }: Props) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   return (
     <View style={[styles.card, highlight && styles.cardHighlight]}>
       {header ? <Text style={styles.header}>{header}</Text> : null}
@@ -17,29 +21,29 @@ export default function InsightCard({ header, body, highlight = false }: Props) 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorScheme) => StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: colors.borderLight,
     padding: Spacing.base,
     marginBottom: Spacing.md,
   },
   cardHighlight: {
-    borderColor: Colors.accentBlue + '60',
+    borderColor: colors.accentBlue + '60',
   },
   header: {
     fontFamily: FontFamily.mono,
     fontSize: FontSize.md,
-    color: Colors.accentBlue,
+    color: colors.accentBlue,
     marginBottom: Spacing.sm,
     textTransform: 'uppercase',
   },
   body: {
     fontFamily: FontFamily.sansRegular,
     fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 22,
   },
 });

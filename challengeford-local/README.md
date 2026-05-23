@@ -6,6 +6,14 @@ POC de análise competitiva de catálogos de pickups para Ford Brasil — FIAP C
 
 ---
 
+> **Nota para avaliadores — credenciais no `.env`**
+>
+> O arquivo `.env` foi incluído intencionalmente neste zip de entrega para que o projeto possa ser executado sem configuração adicional. Todas as chaves e senhas presentes foram geradas especificamente para este ambiente de avaliação do FIAP Challenge e **não estão expostas em repositório público**.
+>
+> Em um ambiente de produção real, o `.env` jamais seria versionado ou distribuído — ele seria injetado via secrets manager (Vault, AWS Secrets Manager etc.). A arquitetura de segurança do projeto já contempla essa separação: o `.gitignore` exclui `.env`, e o code base usa variáveis de ambiente em todos os pontos sensíveis.
+
+---
+
 ## Arquitetura
 
 ```
@@ -13,11 +21,18 @@ POC de análise competitiva de catálogos de pickups para Ford Brasil — FIAP C
 │   App Mobile (React Native + Expo)      │
 │   Porta: 8081 (dev server)              │
 └──────────────────┬──────────────────────┘
-                   │ REST + Bearer JWT
+                   │ HTTPS + Bearer JWT
+                   ▼
+┌─────────────────────────────────────────┐
+│   Nginx Reverse Proxy                   │
+│   :80 → redirect HTTPS                 │
+│   :443 TLS 1.2/1.3 · HSTS · CSP       │
+└──────────────────┬──────────────────────┘
+                   │ proxy_pass HTTP interno
                    ▼
 ┌─────────────────────────────────────────┐
 │   Java Spring Boot API                  │
-│   Porta: 8080                           │
+│   Porta: 8080 (interna)                 │
 │   Autenticação JWT · RBAC · Swagger UI  │
 │   Flyway Migrations · HikariCP Pool     │
 └────────┬─────────────────┬──────────────┘
@@ -49,7 +64,8 @@ POC de análise competitiva de catálogos de pickups para Ford Brasil — FIAP C
 | Serviço | Tecnologia | Porta |
 |---------|-----------|-------|
 | Mobile | React Native 0.81 + Expo 54 + TypeScript | 8081 |
-| Backend Java | Spring Boot 3.2.5 + Java 21 + Oracle JDBC | 8080 |
+| Nginx | Reverse proxy TLS 1.2/1.3 + redirect HTTP→HTTPS | 80 / 443 |
+| Backend Java | Spring Boot 3.2.5 + Java 21 + Oracle JDBC | 8080 (interno) |
 | Microsserviço IA | FastAPI + Python 3.12 + ChromaDB | 8000 |
 | Banco de dados | Oracle 12c+ (remoto FIAP) | 1521 |
 | Vector store | ChromaDB (embutido no container Python) | — |
@@ -59,14 +75,34 @@ POC de análise competitiva de catálogos de pickups para Ford Brasil — FIAP C
 
 ## Pré-requisitos
 
-- **Docker** com Docker Compose v2 (`docker compose`) ou v1 (`docker-compose`)
-- **Node.js** ≥ 18 (para o app mobile)
-- **Chave de API Anthropic** — obrigatória para extração por IA
-- Acesso à rede FIAP (Oracle remoto em `oracle.fiap.com.br`)
+### Obrigatórios
 
-Opcionais:
-- Chave OpenAI — fallback de LLM
-- Chave Firecrawl — scraping avançado de SPAs
+| Ferramenta | Versão mínima | Como instalar |
+|---|---|---|
+| **Docker Desktop** | 24+ | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
+| **Docker Compose** | v2 (`docker compose`) ou v1 (`docker-compose`) | Incluído no Docker Desktop |
+| **Node.js** | 18+ | [nodejs.org](https://nodejs.org) |
+| **npm** | 9+ | Incluído no Node.js |
+| **openssl** | qualquer | Linux/macOS: pré-instalado · Windows: instale [Git for Windows](https://git-scm.com/download/win) |
+
+> **Java, Python e Maven não precisam ser instalados.** Todos rodam dentro dos containers Docker.
+
+### Verificação rápida
+
+```bash
+docker --version          # Docker version 24.x.x
+docker compose version    # Docker Compose version v2.x.x
+node --version            # v18.x.x ou superior
+npm --version             # 9.x.x ou superior
+openssl version           # OpenSSL 3.x.x
+```
+
+### Opcionais
+
+| Ferramenta | Para que serve |
+|---|---|
+| Chave OpenAI | Fallback de LLM se Anthropic falhar |
+| Chave Firecrawl | Scraping avançado de SPAs (melhora extração) |
 
 ---
 
@@ -124,29 +160,34 @@ FIRECRAWL_API_KEY=                     # Scraping avançado (SPAs)
 
 # Windows (Prompt de Comando)
 start.bat
-
-# Windows (PowerShell)
-./start.ps1
 ```
 
 O script faz automaticamente:
 1. Valida pré-requisitos e variáveis de ambiente
-2. Builda e sobe os containers Docker (`python-ia` + `java-api`)
-3. Aguarda healthchecks (até 120s Python, 60s Java)
-4. Instala dependências do mobile se necessário
-5. Abre o Expo (`npx expo start`)
+2. Gera certificado TLS auto-assinado para o nginx (se não existir)
+3. Builda e sobe os containers Docker (`nginx` + `python-ia` + `java-api`)
+4. Aguarda healthchecks (até 120s Python, 60s Java via HTTPS)
+5. Instala dependências do mobile se necessário
+6. Abre o Expo (`npx expo start`)
+
+Ao terminar o Expo (Ctrl+C), o script para automaticamente todos os containers.
 
 ### Método manual (dois terminais)
 
 **Terminal 1 — Backend:**
 ```bash
-cd challengeford-local
+# Gerar cert TLS (uma vez)
+mkdir -p nginx/certs
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout nginx/certs/key.pem -out nginx/certs/cert.pem \
+  -subj "/C=BR/ST=SP/L=SaoPaulo/O=FordChallenge/CN=localhost"
+
 docker compose up --build
 ```
 
 **Terminal 2 — Mobile (aguardar backend saudável):**
 ```bash
-cd challengeford-local/mobile
+cd mobile
 npm install
 npx expo start
 ```
@@ -157,10 +198,20 @@ npx expo start
 
 | Serviço | URL | Esperado |
 |---------|-----|---------|
-| Java API — health | http://localhost:8080/actuator/health | `{"status":"UP"}` |
-| Java API — Swagger UI | http://localhost:8080/swagger-ui.html | Interface OpenAPI |
+| Nginx — redirect HTTP | http://localhost | Redireciona para HTTPS (301) |
+| Java API — health | https://localhost/actuator/health | `{"status":"UP"}` |
+| Java API — Swagger UI | http://localhost:8080/swagger-ui.html | Interface OpenAPI (requer login ADMIN) |
 | Python IA — health | http://localhost:8000/health | `{"status":"ok"}` |
-| Python IA — docs | http://localhost:8000/docs | Interface FastAPI |
+
+> O navegador vai exibir aviso de certificado ao acessar `https://localhost` (cert auto-assinado). Clique em "Avançado → Continuar" para prosseguir. Isso é esperado em ambiente local.
+
+### Credenciais padrão (semeadas via Flyway)
+
+| Usuário | Senha | Role |
+|---------|-------|------|
+| `admin@ford.com` | `Ford@2025` | admin |
+| `analista@ford.com` | `Ford@2025` | analista |
+| `viewer@ford.com` | `Ford@2025` | viewer |
 
 ---
 
@@ -237,11 +288,14 @@ challengeford-local/
 │   ├── App.tsx
 │   └── package.json
 │
-├── docker-compose.yml          # Orquestração dos serviços
-├── .env.example                # Template de variáveis
+├── nginx/
+│   ├── conf/nginx.conf         # Reverse proxy TLS 1.2/1.3, redirect HTTP→HTTPS
+│   └── certs/                  # cert.pem + key.pem (gerados pelo start.sh)
+├── docker-compose.yml          # Orquestração dos serviços (nginx + java + python)
+├── .env.example                # Template de variáveis (sem segredos)
 ├── start.sh                    # Script de inicialização (Linux/macOS)
 ├── start.bat                   # Script de inicialização (Windows)
-└── start.ps1                   # Script de inicialização (PowerShell)
+└── zip-seguro.sh               # Gera zip sem segredos (--demo inclui .env)
 ```
 
 ---
@@ -255,7 +309,25 @@ Primeiro boot baixa o modelo de embeddings `all-MiniLM-L6-v2` e o Chromium para 
 Verifique se `ORACLE_URL`, `ORACLE_USER` e `ORACLE_PASSWORD` estão corretos no `.env` e se há acesso de rede a `oracle.fiap.com.br:1521`.
 
 **App mobile não consegue chamar a API**
-Confirme que `EXPO_PUBLIC_API_URL` aponta para `http://localhost:8080`. Em dispositivo físico, substitua `localhost` pelo IP da máquina na rede local.
+Confirme que `EXPO_PUBLIC_API_URL` aponta para `https://localhost` (ou `http://localhost:8080` como fallback direto sem TLS). Em dispositivo físico, substitua `localhost` pelo IP da máquina na rede local.
+
+**Nginx não inicia / erro de certificado**
+```bash
+# Verificar logs do nginx
+docker logs ford-nginx
+
+# Regenerar certificado
+rm nginx/certs/key.pem nginx/certs/cert.pem
+./start.sh   # gera automaticamente e sobe tudo
+```
+
+**Porta 80 ou 443 já em uso**
+```bash
+# Verificar processo usando a porta
+sudo lsof -i :443
+# Parar todos os containers
+docker compose down
+```
 
 **ChromaDB com erro ou dados corrompidos**
 ```bash
@@ -281,5 +353,11 @@ docker compose down
 ---
 
 ## Equipe
+
+| Nome | RM |
+|---|---|
+| Leonardo de Farias | RM555211 |
+| Gustavo Laur | RM556603 |
+| Giancarlo Cestarolli | RM555248 |
 
 FIAP — Challenge Autosight · 2025

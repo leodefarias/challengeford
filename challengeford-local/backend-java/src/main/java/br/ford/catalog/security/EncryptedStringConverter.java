@@ -23,6 +23,12 @@ public class EncryptedStringConverter implements AttributeConverter<String, Stri
 
     @Override
     public String convertToEntityAttribute(String dbData) {
-        return encryptionService.decrypt(dbData);
+        if (dbData == null) return null;
+        if (!dbData.contains(":")) return dbData;
+        try {
+            return encryptionService.decrypt(dbData);
+        } catch (Exception e) {
+            return dbData;
+        }
     }
 }
