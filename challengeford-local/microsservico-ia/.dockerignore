@@ -1,0 +1,9 @@
+data/chromadb/
+*.md
+*.bat
+*.ps1
+*.sh
+__pycache__/
+**/__pycache__/
+*.pyc
+.env*

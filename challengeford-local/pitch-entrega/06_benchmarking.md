@@ -22,18 +22,20 @@ O problema de análise competitiva de catálogos automotivos é atendido por dif
 
 | Critério | IHS Markit Automotive | AutoPacific VDS | CarGurus Analytics | iCarros Pro | Power BI + Manual | **AutoSight** |
 |---|---|---|---|---|---|---|
-| **Cobertura Brasil** | Parcial | Não | Parcial | Sim | Sim | **Sim (BR-first)** |
-| **Specs técnicas** | Sim | Sim | Não | Não | Sim (manual) | **Sim (50+ attrs)** |
-| **Tempo real** | Não (mensal) | Não (anual) | Parcial (preços) | Parcial | Não | **Sim (on-demand)** |
-| **Q&A em linguagem natural** | Não | Não | Não | Não | Não | **Sim (RAG)** |
-| **Rastreabilidade de fonte** | Parcial | Parcial | Não | Não | Manual | **Sim (100%)** |
-| **Zero alucinação** | N/A | N/A | N/A | N/A | N/A | **Sim (política null)** |
-| **Mobile-first** | Não | Não | Parcial (web) | Sim (app) | Não | **Sim (app nativo)** |
-| **Rankings por perfil** | Não | Parcial | Não | Não | Manual | **Sim (4 perfis)** |
-| **Idioma PT-BR** | Parcial | Não | Não | Sim | Sim | **Sim (nativo)** |
-| **Custo estimado/ano** | $50K+ | $30K+ | N/D | N/D | R$ 120K+ (pessoal) | **~R$ 6K (API costs)** |
-| **Tempo de setup** | Meses | Meses | Dias | Horas | Semanas | **< 1 dia (Docker)** |
-| **Open/integrável** | Não | Não | Não | Não | Sim | **Sim (REST API)** |
+| **Cobertura Brasil** | Parcial | Não | Parcial | Sim | Sim | **Sim (BR-first nativo)** |
+| **Specs técnicas** | Sim | Sim | Não | Não | Sim (manual) | **Sim (50+ attrs automatizados)** |
+| **Tempo real** | Não (mensal) | Não (anual) | Parcial (preços) | Parcial | Não | **Sim (on-demand, < 5 min)** |
+| **Q&A em linguagem natural** | Não | Não | Não | Não | Não | **Sim (RAG Adaptativo PT-BR)** |
+| **Rastreabilidade de fonte** | Parcial | Parcial | Não | Não | Manual | **Sim (100% — `fonte_primaria` por attr)** |
+| **Zero alucinação** | N/A | N/A | N/A | N/A | N/A | **Sim (política null > inventar)** |
+| **Mobile-first** | Não | Não | Parcial (web) | Sim (app) | Não | **Sim (10 telas iOS/Android entregues)** |
+| **Rankings por perfil comprador** | Não | Parcial | Não | Não | Manual | **Sim (4 perfis com scoring ponderado)** |
+| **Segurança corporativa** | Não aplicável | Não aplicável | Não aplicável | Não aplicável | Não aplicável | **JWT + RBAC + AES-256 + Audit Log** |
+| **Idioma PT-BR** | Parcial | Não | Não | Sim | Sim | **Sim (nativo — não é tradução)** |
+| **Custo estimado/ano** | $50K+ | $30K+ | N/D | N/D | R$ 120K+ (pessoal) | **~R$ 6K (API costs) — 95% mais barato** |
+| **Tempo de setup** | Meses | Meses | Dias | Horas | Semanas | **< 15 min (`./start.sh`)** |
+| **Já deployado** | Não | Não | Não | Não | Sim (planilha) | **Sim (Docker Compose, POC funcional)** |
+| **Open/integrável** | Não | Não | Não | Não | Parcial | **Sim (REST API + Swagger UI)** |
 
 ---
 
@@ -133,10 +135,11 @@ O problema de análise competitiva de catálogos automotivos é atendido por dif
 
 Nenhum concorrente foi construído especificamente para o mercado brasileiro.
 
-- Campo `mercado_confirmado_br = true` em todos os atributos
-- Integração nativa com FIPE API (preços de referência BR)
-- Fontes: sites `.com.br` oficiais, iCarros, YouTube PT-BR
-- Lógica de validação com contexto específico do mercado brasileiro
+- Campo `mercado_confirmado_br = true` em todos os atributos — apenas dados confirmados para o Brasil
+- Integração nativa com FIPE API (preços de referência oficiais BR) como camada de fallback e validação
+- Fontes priorizadas: PDFs oficiais `.com.br`, sites brasileiros dos fabricantes, iCarros.com.br
+- Lógica de validação com contexto específico do mercado brasileiro (ranges de potência, preço e dimensões calibrados para o segmento BR)
+- Q&A em PT-BR nativo — não é tradução: o modelo responde em português com terminologia automotiva brasileira
 
 ---
 
@@ -228,12 +231,13 @@ AutoSight ocupa o quadrante **baixo custo + alta cobertura BR** — posição ú
 
 ## 6. Conclusão
 
-**AutoSight é a única solução que combina:**
+**AutoSight é a única solução que combina — e já entregou:**
 
-1. Extração automática de specs técnicas de catálogos automotivos
-2. Foco exclusivo no mercado brasileiro
-3. RAG Q&A em português
-4. Zero alucinação com rastreabilidade total de fontes
-5. Mobile-first
-6. Custo marginal (sem licença enterprise)
-7. Open e integrável via REST API
+1. Extração automática de specs técnicas com hierarquia de 5 fontes e fallback automático
+2. Foco exclusivo no mercado brasileiro — BR-first por design, não por adaptação
+3. RAG Q&A Adaptativo em português — classifica pergunta e usa contexto relevante
+4. Zero alucinação com rastreabilidade total: `fonte_primaria` + `confianca` (0–1) por atributo
+5. Mobile-first: 10 telas iOS/Android implementadas e funcionais
+6. Custo marginal: ~R$ 0,50/extração vs. R$ 8.000/ciclo manual ou US$ 50K+/ano enterprise
+7. Open e integrável via REST API + Swagger UI + Docker Compose — setup em < 15 minutos
+8. **Já em produção (POC):** `docker compose up` sobe o sistema completo em < 60 segundos, com 6 veículos disponíveis e todos os controles de segurança corporativa ativos (JWT, RBAC, AES-256, audit log)

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -26,6 +27,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
             "/api/auth/login",         5,
             "/api/catalogos/extrair", 10,
             "/api/chat",              20
+    );
+
+    private static final Set<String> TRUSTED_PROXY_PREFIXES = Set.of(
+            "127.0.0.1", "::1", "0:0:0:0:0:0:0:1",
+            "172.16.", "172.17.", "172.18.", "172.19.", "172.20.",
+            "172.21.", "172.22.", "172.23.", "172.24.", "172.25.",
+            "172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.",
+            "10.", "192.168."
     );
 
     private final ConcurrentHashMap<String, List<Long>> attempts = new ConcurrentHashMap<>();
@@ -71,10 +80,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String resolveIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+        String remoteAddr = request.getRemoteAddr();
+        if (isTrustedProxy(remoteAddr)) {
+            String forwarded = request.getHeader("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isBlank()) {
+                return forwarded.split(",")[0].trim();
+            }
         }
-        return request.getRemoteAddr();
+        return remoteAddr;
+    }
+
+    private boolean isTrustedProxy(String addr) {
+        for (String prefix : TRUSTED_PROXY_PREFIXES) {
+            if (addr.equals(prefix) || addr.startsWith(prefix)) return true;
+        }
+        return false;
     }
 }

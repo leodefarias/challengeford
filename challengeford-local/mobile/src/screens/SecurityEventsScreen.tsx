@@ -7,7 +7,8 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing, Radius } from '../theme';
+import { Colors, FontFamily, FontSize, Spacing, Radius, ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
 
 type Severity = 'critical' | 'warning' | 'success' | 'info';
 
@@ -93,7 +94,8 @@ const EVENTS: SecurityEvent[] = [
   },
 ];
 
-function EventCard({ item }: { item: SecurityEvent }) {
+function EventCard({ item, colors }: { item: SecurityEvent; colors: ColorScheme }) {
+  const styles = makeStyles(colors);
   const color = SEVERITY_COLOR[item.severity];
   return (
     <View style={[styles.card, { borderLeftColor: color }]}>
@@ -113,6 +115,9 @@ function EventCard({ item }: { item: SecurityEvent }) {
 }
 
 export default function SecurityEventsScreen({ navigation }: any) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   const criticalCount = EVENTS.filter(e => e.severity === 'critical').length;
   const warningCount  = EVENTS.filter(e => e.severity === 'warning').length;
 
@@ -135,8 +140,8 @@ export default function SecurityEventsScreen({ navigation }: any) {
           <Text style={[styles.summaryCount, { color: '#f6a02d' }]}>{warningCount}</Text>
           <Text style={styles.summaryLabel}>Avisos</Text>
         </View>
-        <View style={[styles.summaryCard, { borderColor: Colors.accentGreen }]}>
-          <Text style={[styles.summaryCount, { color: Colors.accentGreen }]}>
+        <View style={[styles.summaryCard, { borderColor: colors.accentGreen }]}>
+          <Text style={[styles.summaryCount, { color: colors.accentGreen }]}>
             {EVENTS.filter(e => e.severity === 'success').length}
           </Text>
           <Text style={styles.summaryLabel}>OK</Text>
@@ -146,7 +151,7 @@ export default function SecurityEventsScreen({ navigation }: any) {
       <FlatList
         data={EVENTS}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => <EventCard item={item} />}
+        renderItem={({ item }) => <EventCard item={item} colors={colors} />}
         contentContainerStyle={styles.list}
         ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
       />
@@ -154,8 +159,8 @@ export default function SecurityEventsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: ColorScheme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -168,18 +173,18 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.cardLight,
+    backgroundColor: colors.cardLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backText: {
     fontSize: FontSize.xl,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   title: {
     fontFamily: FontFamily.displayBold,
     fontSize: FontSize.xl,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   placeholder: { width: 36 },
   summary: {
@@ -190,7 +195,7 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.sm,
     borderWidth: 1,
     padding: Spacing.sm,
@@ -203,11 +208,11 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontFamily: FontFamily.sansRegular,
     fontSize: FontSize.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   list: { paddingHorizontal: Spacing.base, paddingBottom: Spacing.xl },
   card: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.sm,
     padding: Spacing.md,
     borderLeftWidth: 3,
@@ -223,12 +228,12 @@ const styles = StyleSheet.create({
   message: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   detail: {
     fontFamily: FontFamily.sansRegular,
     fontSize: FontSize.md,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   badge: {
     fontFamily: FontFamily.mono,
@@ -241,7 +246,7 @@ const styles = StyleSheet.create({
   timestamp: {
     fontFamily: FontFamily.mono,
     fontSize: FontSize.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'right',
   },
 });

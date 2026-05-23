@@ -11,10 +11,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
 
-# Playwright chromium (usado como fallback de scraping JS)
-RUN python -m playwright install chromium --with-deps 2>/dev/null || true
+# Playwright chromium — deps já instalados via apt-get acima
+RUN python -m playwright install chromium 2>/dev/null || true
 
 COPY src/ ./src/
 COPY data/seed/ ./data/seed/

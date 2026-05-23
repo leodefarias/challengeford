@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing, Radius, Shadow } from '../theme';
+import { FontFamily, FontSize, Spacing, Radius, Shadow, ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
 import SourceBadge from './SourceBadge';
 import CircularProgress from './CircularProgress';
 
@@ -9,6 +10,7 @@ interface Props {
   value?: string | number;
   unit?: string;
   source?: string;
+  sourceUrl?: string;
   scoreValue?: number;
   scoreLabel?: string;
   scoreSubLabel?: string;
@@ -19,10 +21,13 @@ export default function MetricCard({
   value,
   unit,
   source,
+  sourceUrl,
   scoreValue,
   scoreLabel,
   scoreSubLabel,
 }: Props) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const isScore = scoreValue !== undefined;
 
   return (
@@ -42,31 +47,27 @@ export default function MetricCard({
             <Text style={styles.currencyPrefix}>
               {typeof value === 'string' && value.startsWith('R$') ? 'R$' : ''}
             </Text>
-            <Text style={[styles.value, { color: getValueColor(label) }]}>
+            <Text style={styles.value}>
               {typeof value === 'string' && value.startsWith('R$')
                 ? value.replace('R$', '')
                 : value}
             </Text>
             {unit ? <Text style={styles.unit}>{unit}</Text> : null}
           </View>
-          {source ? <SourceBadge label={source} /> : null}
+          {source ? <SourceBadge label={source} url={sourceUrl} /> : null}
         </View>
       )}
     </View>
   );
 }
 
-function getValueColor(label: string): string {
-  return Colors.textPrimary;
-}
-
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorScheme) => StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Spacing.md,
     minHeight: 113,
     ...Shadow.card,
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: FontFamily.mono,
     fontSize: FontSize.md,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginBottom: Spacing.xs,
   },
   content: {
@@ -90,19 +91,19 @@ const styles = StyleSheet.create({
   currencyPrefix: {
     fontFamily: FontFamily.mono,
     fontSize: FontSize.lg,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     paddingBottom: 6,
   },
   value: {
     fontFamily: FontFamily.mono,
     fontSize: FontSize['4xl'],
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 48,
   },
   unit: {
     fontFamily: FontFamily.displayMedium,
     fontSize: FontSize.lg,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     paddingBottom: 8,
   },
   scoreContent: {
@@ -117,12 +118,12 @@ const styles = StyleSheet.create({
   scoreLabel: {
     fontFamily: FontFamily.sansBold,
     fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   scoreSubLabel: {
     fontFamily: FontFamily.sansBold,
     fontSize: FontSize.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
 });

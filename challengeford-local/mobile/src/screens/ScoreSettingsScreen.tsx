@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { Colors, FontFamily, FontSize, Spacing, Radius } from '../theme';
-import Navbar from '../components/Navbar';
+import { FontFamily, FontSize, Spacing, Radius, ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
+import BackHeader from '../components/BackHeader';
 
 interface Weight {
   key: string;
@@ -21,6 +22,9 @@ const INITIAL_WEIGHTS: Weight[] = [
 ];
 
 export default function ScoreSettingsScreen({ navigation }: any) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   const [weights, setWeights] = useState<Weight[]>(INITIAL_WEIGHTS);
 
   const update = (key: string, val: number) => {
@@ -32,8 +36,8 @@ export default function ScoreSettingsScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <BackHeader navigation={navigation} title="Config. Score" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Navbar />
 
         <Text style={styles.title}>Configuração de Score</Text>
         <Text style={styles.subtitle}>Ajuste os pesos por grupo e perfis de competição por catálogo Ford.</Text>
@@ -45,7 +49,7 @@ export default function ScoreSettingsScreen({ navigation }: any) {
             <View key={w.key} style={styles.row}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>{w.label}</Text>
-                <Text style={[styles.pct, valid && { color: Colors.accentGreen }]}>{w.value}%</Text>
+                <Text style={[styles.pct, valid && { color: colors.accentGreen }]}>{w.value}%</Text>
               </View>
               <Slider
                 style={styles.slider}
@@ -54,16 +58,16 @@ export default function ScoreSettingsScreen({ navigation }: any) {
                 step={1}
                 value={w.value}
                 onValueChange={(v) => update(w.key, v)}
-                minimumTrackTintColor={Colors.accentBlue}
-                maximumTrackTintColor={Colors.borderLight}
-                thumbTintColor={Colors.accentBlue}
+                minimumTrackTintColor={colors.accentBlue}
+                maximumTrackTintColor={colors.borderLight}
+                thumbTintColor={colors.accentBlue}
               />
             </View>
           ))}
 
-          <View style={[styles.totalRow, { borderTopColor: valid ? Colors.accentGreen : '#ea4545' }]}>
+          <View style={[styles.totalRow, { borderTopColor: valid ? colors.accentGreen : '#ea4545' }]}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={[styles.totalValue, { color: valid ? Colors.accentGreen : '#ea4545' }]}>{total}%</Text>
+            <Text style={[styles.totalValue, { color: valid ? colors.accentGreen : '#ea4545' }]}>{total}%</Text>
           </View>
 
           <TouchableOpacity
@@ -79,34 +83,34 @@ export default function ScoreSettingsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: ColorScheme) => StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.background },
   content: { paddingHorizontal: Spacing.md, paddingBottom: 60 },
   title: {
     fontFamily: FontFamily.displayBold,
     fontSize: FontSize.lg,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginTop: Spacing.xl,
     marginBottom: 4,
   },
   subtitle: {
     fontFamily: FontFamily.sansRegular,
     fontSize: FontSize.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginBottom: Spacing.base,
   },
   card: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Spacing.base,
     marginBottom: Spacing.xl,
   },
   cardTitle: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.base,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginBottom: Spacing.base,
   },
   row: {
@@ -121,12 +125,12 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.sm,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   pct: {
     fontFamily: FontFamily.mono,
     fontSize: FontSize.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   slider: {
     width: '100%',
@@ -139,19 +143,18 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     marginTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
   },
   totalLabel: {
     fontFamily: FontFamily.sansBold,
     fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   totalValue: {
     fontFamily: FontFamily.sansBold,
     fontSize: FontSize.base,
   },
   saveBtn: {
-    backgroundColor: Colors.accentBlue,
+    backgroundColor: colors.accentBlue,
     borderRadius: Radius.sm,
     padding: Spacing.base,
     alignItems: 'center',
@@ -160,6 +163,6 @@ const styles = StyleSheet.create({
   saveBtnText: {
     fontFamily: FontFamily.sansBold,
     fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    color: '#f2f2f2',
   },
 });

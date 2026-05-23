@@ -26,7 +26,7 @@
 
 | Benefício | Detalhe |
 |---|---|
-| Velocidade | Análise competitiva em < 1h vs. 3–5 dias (redução de 98%) |
+| Velocidade | Ciclo completo em < 4h vs. 80h manuais (redução de 95%) |
 | Cobertura | 50+ atributos técnicos por veículo, 6 modelos simultaneamente |
 | Confiabilidade | Zero alucinação — `null` em vez de dados inventados |
 | Rastreabilidade | Toda dado tem fonte primária e secundária auditável |
@@ -99,47 +99,58 @@
 
 ### 7. Atividades-Chave (Key Activities)
 
-**Durante Desenvolvimento:**
-- Engenharia do agente ReAct multi-ferramenta
-- Treinamento e manutenção das 4 bases ChromaDB
-- Desenvolvimento e testes do app mobile
-- Configuração de pipelines CI/CD e Docker
+**Pipeline de Extração (já implementado):**
+- Agente ReAct multi-ferramenta dispara hierarquia de 5 fontes: PDF oficial → Playwright headless → Firecrawl (SPA) → iCarros → FIPE API
+- Validação pós-LLM com Pydantic v2: rejeita valores fora dos ranges hardcoded; retorna `null` em vez de dado inventado
+- Idempotência garantida: cabeçalho `X-Idempotency-Key` evita duplicatas de extração
+- RAG Adaptativo: classifica pergunta (factual/comparação/recomendação) e usa estratégia de contexto adequada
 
-**Em Operação:**
-- Monitoramento de disponibilidade de fontes (sites/PDFs)
-- Atualização de scrapers quando layouts mudam
-- Revisão de termos pendentes e mapeamento de terminologia
-- Atualização de catálogos ao lançar novos modelos/versões
-- Gestão de custos LLM (cache, fallback, idempotência)
+**Durante Desenvolvimento (conclusão):**
+- Finalização de cobertura de testes JUnit 5 (Java) e pytest (Python)
+- Validação de acurácia de extração vs. PDFs originais (amostra 20% dos atributos)
+- Documentação TOGAF/Archi com 4 visões arquiteturais
+
+**Em Operação (pós-POC):**
+- Monitoramento de disponibilidade de fontes (sites/PDFs) — tela "Status do Agente" no app
+- Atualização de scrapers quando layouts de fabricantes mudam
+- Revisão de termos pendentes e mapeamento de terminologia — tela "Itens Pendentes"
+- Atualização de catálogos ao lançar novos modelos/versões (extração on-demand < 30 min por modelo)
+- Gestão de custos LLM: `CHAT_CACHE` (TTL 30 dias) reduz chamadas recorrentes; idempotência evita reprocessamento
 
 ---
 
 ### 8. Parceiros-Chave (Key Partners)
 
-| Parceiro | Papel |
-|---|---|
-| **Anthropic** | LLM principal (Claude Sonnet) — extração e RAG |
-| **OpenAI** | LLM fallback (GPT-4) — continuidade do serviço |
-| **Firecrawl** | Scraping de SPAs JavaScript-heavy |
-| **Oracle/FIAP** | Banco de dados relacional durante POC |
-| **FIPE** | Tabela de preços de referência Brasil |
-| **iCarros.com.br** | Fonte universal BR (OLX Group) |
-| **Microsoft Playwright** | Scraping headless de sites fabricantes |
-| **Docker Hub** | Containerização e distribuição |
+| Parceiro | Papel | Custo |
+|---|---|---|
+| **OpenAI** | LLM principal em produção (GPT-4.1-mini) — chat, ranking, justificativas | ~US$ 0,08/extração |
+| **Anthropic** | LLM alternativo (Claude) — configurável via `LLM_PROVIDER` env var | Variável |
+| **Firecrawl** | Scraping de SPAs JavaScript-heavy (4ª camada do fallback) | ~US$ 20–50/mês |
+| **FIAP / Oracle** | Banco de dados Oracle 12c durante POC | Gratuito (incluso no challenge) |
+| **FIPE** | Tabela de preços de referência Brasil (5ª camada do fallback) | Gratuito (API pública) |
+| **iCarros.com.br** | Fonte universal BR para preços e disponibilidade (4ª camada) | Gratuito (scraping público) |
+| **Microsoft Playwright** | Scraping headless de sites dos fabricantes (2ª camada) | Gratuito (open source) |
+| **ChromaDB** | Vector store para RAG — embeddings persistidos em volume Docker | Gratuito (open source) |
+| **Docker Hub** | Containerização e distribuição do POC | Gratuito |
 
 ---
 
 ### 9. Estrutura de Custos (Cost Structure)
 
-| Item | Custo Estimado |
-|---|---|
-| Claude API (Anthropic) | ~$0.08/extração × 6 veículos/mês = ~$0.48/ciclo |
-| Firecrawl API | ~$20–50/mês (plano básico) |
-| Infraestrutura cloud (pós-POC) | ~R$ 500–2.000/mês (VM + Oracle cloud) |
-| Equipe manutenção | 4–8h/mês para atualizações de scrapers |
-| Oracle FIAP (durante POC) | Gratuito (incluso no challenge FIAP) |
+| Item | Custo Durante POC | Custo Pós-POC |
+|---|---|---|
+| LLM — OpenAI GPT-4.1-mini | ~US$ 0,08/extração × 6 veículos = ~US$ 0,48/ciclo | Idem (escala linear por veículo) |
+| Firecrawl API (scraping SPA) | ~US$ 20–50/mês (plano básico) | Idem |
+| ChromaDB (vector store) | Gratuito (open source, volume Docker) | Gratuito |
+| Oracle FIAP | Gratuito (incluso no challenge) | ~R$ 500–2.000/mês (Oracle cloud) |
+| Infraestrutura cloud (VM) | Gratuito (máquina local / Docker) | ~R$ 300–800/mês |
+| Embeddings (all-MiniLM-L6-v2) | Gratuito (modelo local, sem chamada externa) | Gratuito |
+| Equipe de manutenção | Time FIAP durante POC | 4–8h/mês para scrapers + novos modelos |
 
-**Modelo de custo:** Baixo custo variável (LLM per-call), alto custo fixo inicial (desenvolvimento).
+**Custo total estimado por ciclo completo (6 veículos): ~R$ 2–3** (LLM + proporcional de Firecrawl).
+**Custo anual de operação pós-POC: ~R$ 6.000–15.000/ano** — vs. R$ 120.000+/ano do processo manual ou US$ 50.000+/ano de soluções enterprise.
+
+**Modelo de custo:** Baixo custo variável (LLM por chamada), zero custo em vetores e embeddings. A maior economia está na substituição de 76h/mês de analista sênior por < 4h/mês de supervisão.
 
 ---
 
@@ -149,8 +160,8 @@
 
 | Componente | Falha | Impacto Operacional | Contingência |
 |---|---|---|---|
-| Agente de extração IA | Falha de scraping | Analistas retornam ao processo manual temporariamente | Fallback hierárquico (PDF → Playwright → Firecrawl → iCarros) |
-| Claude API (Anthropic) | Indisponibilidade | Extração bloqueada | Fallback automático para OpenAI GPT-4 |
+| Agente de extração IA | Falha de scraping | Analistas retornam ao processo manual temporariamente | Fallback hierárquico de 5 camadas: PDF → Playwright → Firecrawl → iCarros → FIPE |
+| LLM (OpenAI/Anthropic) | Indisponibilidade | Extração ou chat bloqueados | Troca automática via `LLM_PROVIDER` env var; fallback entre provedores |
 | Oracle FIAP | Banco indisponível | Consultas falham, novas extrações não persistem | ChromaDB como cache de leitura; extração pode rodar sem Oracle |
 | ChromaDB | Volume corrompido | RAG Q&A degradado | Reinicialização idempotente via script `01_seed_kb.py` |
 | Mobile App | Bug crítico | Usuários sem acesso à interface | REST API acessível via Swagger UI como fallback |

@@ -1,55 +1,96 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing, Radius, Shadow } from '../theme';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import { FontFamily, FontSize, Spacing, Radius, Shadow, ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
 import Navbar from '../components/Navbar';
+import { getCatalogos, comparar, CatalogoResumo, Comparativo } from '../services/api';
 
-interface CompRow {
-  label: string;
-  ford: string;
-  toyota: string;
-  vw: string;
-  fordHighlight?: boolean;
+function formatVal(val: any): string {
+  if (val === null || val === undefined) return '—';
+  if (val === true) return '✓';
+  if (val === false) return '—';
+  if (typeof val === 'number') return Number.isInteger(val) ? String(val) : val.toFixed(1);
+  return String(val);
 }
 
-const ROWS: CompRow[] = [
-  { label: 'Potência (cv)', ford: '397', toyota: '224', vw: '272', fordHighlight: true },
-  { label: 'Torque (Nm)', ford: '583', toyota: '500', vw: '600', fordHighlight: true },
-  { label: 'Preço (R$)', ford: '470k', toyota: '340k', vw: '415k' },
-  { label: 'Câmera 360°', ford: '✓', toyota: '✓', vw: '—' },
-  { label: 'Frenagem Aut.', ford: '✓', toyota: '✓', vw: '✓' },
-  { label: 'Vadeo (mm)', ford: '850', toyota: '700', vw: '500', fordHighlight: true },
-  { label: 'Ângulo At. (°)', ford: '32.5', toyota: '29.0', vw: '24.0', fordHighlight: true },
-  { label: 'Tração', ford: '4x4', toyota: '4x4', vw: '4x4_int' },
-];
-
-interface CapabilityRow {
-  label: string;
-  fordLevel: number;
-  toyotaLevel: number;
-  maxLevel?: number;
+function toLabel(attr: string): string {
+  const LABELS: Record<string, string> = {
+    potencia_cv: 'Potência (cv)', torque_nm: 'Torque (Nm)', preco_tabela_brl: 'Preço (R$)',
+    camera_360: 'Câmera 360°', frenagem_autonoma: 'Frenagem Aut.', profundidade_vadeo_mm: 'Vadeo (mm)',
+    angulo_ataque_graus: 'Ângulo At. (°)', tracao: 'Tração', airbags_quantidade: 'Airbags',
+    cambio_marchas: 'Marchas', capacidade_reboque_kg: 'Reboque (kg)', capacidade_carga_kg: 'Carga (kg)',
+    controle_descida: 'Controle Descida', conexao_sem_fio: 'CarPlay sem fio',
+  };
+  return LABELS[attr] ?? attr.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
-const CAPABILITY_ROWS: CapabilityRow[] = [
-  { label: 'Visibilidade Traseira', fordLevel: 2, toyotaLevel: 2, maxLevel: 3 },
-  { label: 'Performance Motor', fordLevel: 3, toyotaLevel: 3, maxLevel: 3 },
-  { label: 'Capacidade Off-Road', fordLevel: 3, toyotaLevel: 3, maxLevel: 3 },
-  { label: 'Frenagem Inteligente', fordLevel: 2, toyotaLevel: 2, maxLevel: 3 },
-];
-
-function LevelDots({ filled, total, color }: { filled: number; total: number; color: string }) {
-  return (
-    <View style={styles.dotsRow}>
-      {Array.from({ length: total }).map((_, i) => (
-        <View
-          key={i}
-          style={[styles.dot, { backgroundColor: i < filled ? color : '#505050' }]}
-        />
-      ))}
-    </View>
-  );
+function vehicleShortName(full: string): string {
+  const parts = full.split(' ');
+  return parts.slice(0, 2).join('\n').toUpperCase();
 }
 
 export default function ComparativoScreen() {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
+  const [catalogos, setCatalogos] = useState<CatalogoResumo[]>([]);
+  const [selected, setSelected] = useState<number[]>([]);
+  const [comparativo, setComparativo] = useState<Comparativo | null>(null);
+  const [loadingList, setLoadingList] = useState(true);
+  const [loadingComp, setLoadingComp] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadCatalogos = useCallback(async () => {
+    setLoadingList(true);
+    setError(null);
+    try {
+      const list = await getCatalogos();
+      setCatalogos(list);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoadingList(false);
+    }
+  }, []);
+
+  useEffect(() => { loadCatalogos(); }, []);
+
+  const toggleSelect = (id: number) => {
+    setSelected(prev =>
+      prev.includes(id)
+        ? prev.filter(x => x !== id)
+        : [...prev, id]
+    );
+    setComparativo(null);
+  };
+
+  const runComparativo = async () => {
+    if (selected.length < 2) return;
+    setLoadingComp(true);
+    setError(null);
+    try {
+      const result = await comparar(selected);
+      setComparativo(result);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoadingComp(false);
+    }
+  };
+
+  const veiculos = comparativo?.veiculos ?? [];
+  const atributos = comparativo?.atributosComparados ?? [];
+  const tabela = comparativo?.tabela ?? {};
+  const destaques = comparativo?.destaques ?? {};
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -57,123 +98,181 @@ export default function ComparativoScreen() {
 
         <View style={styles.section}>
           <Text style={styles.title}>Comparativo Competitivo</Text>
-          <Text style={styles.subtitle}>Atributos normalizados</Text>
+          <Text style={styles.subtitle}>
+            {selected.length === 0
+              ? 'Selecione ao menos 2 veículos para comparar'
+              : selected.length === 1
+              ? 'Selecione mais 1 veículo para comparar'
+              : `${selected.length} veículos selecionados`}
+          </Text>
         </View>
 
-        {/* Specs Table */}
-        <View style={styles.table}>
-          {/* Header */}
-          <View style={[styles.tableRow, styles.tableHeader]}>
-            <Text style={[styles.headerCell, { flex: 2 }]}>ATRIBUTO</Text>
-            <Text style={[styles.headerCell, { color: Colors.accentBlue }]}>FORD{'\n'}RAPTOR</Text>
-            <Text style={styles.headerCell}>TOYOTA{'\n'}HILUX GR-S</Text>
-            <Text style={styles.headerCell}>VW{'\n'}ARAROK V6</Text>
+        {loadingList ? (
+          <ActivityIndicator color={colors.accentBlue} />
+        ) : (
+          <View style={styles.selectorGrid}>
+            {catalogos.map(c => {
+              const isSelected = selected.includes(c.id);
+              return (
+                <TouchableOpacity
+                  key={c.id}
+                  style={[styles.selectorChip, isSelected && styles.selectorChipActive]}
+                  onPress={() => toggleSelect(c.id)}
+                >
+                  <Text style={[styles.selectorText, isSelected && styles.selectorTextActive]}>
+                    {c.marca.toUpperCase()} {c.modelo}
+                  </Text>
+                  <Text style={[styles.selectorSub, isSelected && styles.selectorTextActive]}>
+                    {c.versao}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-          {ROWS.map((row, i) => (
-            <View key={i} style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}>
-              <Text style={[styles.cellLabel, { flex: 2 }]}>{row.label}</Text>
-              <Text style={[styles.cellValue, row.fordHighlight && { color: Colors.accentGreen }]}>
-                {row.ford}
-              </Text>
-              <Text style={styles.cellValue}>{row.toyota}</Text>
-              <Text style={styles.cellValue}>{row.vw}</Text>
-            </View>
-          ))}
-        </View>
+        )}
 
-        {/* Capability Areas */}
-        <View style={styles.section}>
-          <Text style={styles.title}>Capability Areas — Níveis de maturidade</Text>
-        </View>
+        {selected.length >= 2 && (
+          <TouchableOpacity
+            style={[styles.compareBtn, loadingComp && styles.compareBtnDisabled]}
+            onPress={runComparativo}
+            disabled={loadingComp}
+          >
+            {loadingComp
+              ? <ActivityIndicator color="#f2f2f2" />
+              : <Text style={styles.compareBtnText}>Comparar {selected.length} veículos</Text>
+            }
+          </TouchableOpacity>
+        )}
 
-        <View style={[styles.table, { marginTop: 0 }]}>
-          <View style={[styles.tableRow, styles.tableHeader]}>
-            <Text style={[styles.headerCell, { flex: 2 }]}>ÁREA</Text>
-            <Text style={[styles.headerCell, { color: Colors.accentBlue }]}>FORD{'\n'}RAPTOR</Text>
-            <Text style={styles.headerCell}>HILUX{'\n'}GR-S</Text>
+        {error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{error}</Text>
           </View>
-          {CAPABILITY_ROWS.map((row, i) => (
-            <View key={i} style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}>
-              <Text style={[styles.cellLabel, { flex: 2 }]}>{row.label}</Text>
-              <LevelDots filled={row.fordLevel} total={row.maxLevel || 3} color={Colors.accentGreen} />
-              <LevelDots filled={row.toyotaLevel} total={row.maxLevel || 3} color={Colors.accentBlue} />
+        ) : null}
+
+        {comparativo && veiculos.length > 0 && (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.title}>Atributos normalizados</Text>
             </View>
-          ))}
-        </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.table}>
+                <View style={[styles.tableRow, styles.tableHeader]}>
+                  <Text style={[styles.headerCell, { width: 130 }]}>ATRIBUTO</Text>
+                  {veiculos.map((v, i) => (
+                    <Text key={i} style={[styles.headerCell, { width: 90, color: i === 0 ? colors.accentBlue : colors.textPrimary }]}>
+                      {vehicleShortName(v)}
+                    </Text>
+                  ))}
+                </View>
+
+                {atributos
+                  .filter(attr => veiculos.some(v => tabela[v]?.[attr] !== null && tabela[v]?.[attr] !== undefined))
+                  .slice(0, 20)
+                  .map((attr, i) => (
+                    <View key={attr} style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}>
+                      <Text style={[styles.cellLabel, { width: 130 }]}>{toLabel(attr)}</Text>
+                      {veiculos.map((v, j) => {
+                        const isWinner = destaques[attr] === v;
+                        return (
+                          <Text key={j} style={[styles.cellValue, { width: 90 }, isWinner && { color: colors.accentGreen }]}>
+                            {formatVal(tabela[v]?.[attr])}
+                          </Text>
+                        );
+                      })}
+                    </View>
+                  ))}
+              </View>
+            </ScrollView>
+          </>
+        )}
+
+        {!loadingList && catalogos.length === 0 && (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyText}>Nenhum catálogo disponível.</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: ColorScheme) => StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.md, paddingBottom: 100 },
   section: { marginTop: Spacing.xl, marginBottom: Spacing.md },
-  title: {
-    fontFamily: FontFamily.displayBold,
-    fontSize: FontSize.lg,
-    color: Colors.textPrimary,
-    marginBottom: 4,
+  title: { fontFamily: FontFamily.displayBold, fontSize: FontSize.lg, color: colors.textPrimary, marginBottom: 4 },
+  subtitle: { fontFamily: FontFamily.displayBold, fontSize: FontSize.sm, color: colors.textMuted },
+  selectorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.md },
+  selectorChip: {
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: colors.card,
+    minWidth: 120,
   },
-  subtitle: {
-    fontFamily: FontFamily.displayBold,
-    fontSize: FontSize.sm,
-    color: Colors.textMuted,
+  selectorChipActive: { borderColor: colors.accentBlue, backgroundColor: colors.accentBlue + '22' },
+  selectorText: { fontFamily: FontFamily.mono, fontSize: FontSize.sm, color: colors.textMuted },
+  selectorSub: { fontFamily: FontFamily.sansRegular, fontSize: FontSize.sm - 1, color: colors.textMuted, marginTop: 2 },
+  selectorTextActive: { color: colors.accentBlue },
+  compareBtn: {
+    backgroundColor: colors.accentBlue,
+    borderRadius: Radius.md,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    ...Shadow.card,
   },
+  compareBtnDisabled: { opacity: 0.6 },
+  compareBtnText: { fontFamily: FontFamily.sansBold, fontSize: FontSize.base, color: '#f2f2f2' },
+  errorBox: {
+    backgroundColor: '#ea454522',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#ea4545',
+    padding: Spacing.base,
+    marginBottom: Spacing.md,
+  },
+  errorText: { fontFamily: FontFamily.sansRegular, fontSize: FontSize.sm, color: '#ea4545' },
   table: {
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     overflow: 'hidden',
     marginBottom: Spacing.xl,
   },
-  tableHeader: {
-    backgroundColor: '#30343d',
-  },
+  tableHeader: { backgroundColor: colors.cardLight },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    borderBottomColor: colors.borderLight,
   },
-  tableRowAlt: {
-    backgroundColor: Colors.card + '80',
-  },
+  tableRowAlt: { backgroundColor: colors.card + '80' },
   headerCell: {
-    flex: 1,
     fontFamily: FontFamily.mono,
     fontSize: FontSize.md,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     padding: Spacing.sm,
     textAlign: 'center',
   },
   cellLabel: {
-    flex: 1,
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     padding: Spacing.sm,
     paddingLeft: Spacing.base,
   },
   cellValue: {
-    flex: 1,
     fontFamily: FontFamily.sansBold,
     fontSize: FontSize.md,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     padding: Spacing.sm,
     textAlign: 'center',
   },
-  dotsRow: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 4,
-    padding: Spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 3,
-  },
+  emptyBox: { marginTop: Spacing.xl, alignItems: 'center', padding: Spacing.xl },
+  emptyText: { fontFamily: FontFamily.sansBold, fontSize: FontSize.base, color: colors.textPrimary },
 });

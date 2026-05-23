@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing, Radius } from '../theme';
-import Navbar from '../components/Navbar';
+import { FontFamily, FontSize, Spacing, Radius, ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
+import BackHeader from '../components/BackHeader';
 
 interface NewsItem {
   date: string;
@@ -34,19 +35,20 @@ const NEWS: NewsItem[] = [
   },
 ];
 
-export default function TimelineScreen() {
+export default function TimelineScreen({ navigation }: any) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   return (
     <SafeAreaView style={styles.safeArea}>
+      <BackHeader navigation={navigation} title="Timeline de Mudanças" />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Navbar />
 
         <View style={styles.section}>
-          <Text style={styles.title}>Timeline de Mudanças</Text>
           <Text style={styles.subtitle}>Atualizações detectadas automaticamente</Text>
           <Text style={styles.subtitle}>6 catálogos monitorados</Text>
         </View>
 
-        {/* Trend Card */}
         <View style={styles.trendCard}>
           <Text style={styles.trendLabel}>TENDÊNCIA DETECTADA</Text>
           <Text style={styles.trendBody}>
@@ -55,7 +57,6 @@ export default function TimelineScreen() {
           </Text>
         </View>
 
-        {/* Timeline Feed */}
         <View style={styles.timeline}>
           {NEWS.map((item, i) => (
             <View key={i} style={styles.newsItem}>
@@ -76,40 +77,34 @@ export default function TimelineScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: ColorScheme) => StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.md, paddingBottom: 100 },
   section: { marginTop: Spacing.xl, marginBottom: Spacing.base },
-  title: {
-    fontFamily: FontFamily.displayBold,
-    fontSize: FontSize.lg,
-    color: Colors.textPrimary,
-    marginBottom: 4,
-  },
   subtitle: {
     fontFamily: FontFamily.displayBold,
     fontSize: FontSize.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   trendCard: {
-    backgroundColor: Colors.accentBlue + '33',
+    backgroundColor: colors.accentBlue + '33',
     borderRadius: 13,
     borderWidth: 0.5,
-    borderColor: Colors.accentBlue,
+    borderColor: colors.accentBlue,
     padding: Spacing.base,
     marginBottom: Spacing.xl,
   },
   trendLabel: {
     fontFamily: FontFamily.mono,
     fontSize: FontSize.sm,
-    color: Colors.accentBlue,
+    color: colors.accentBlue,
     marginBottom: Spacing.sm,
   },
   trendBody: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.sm,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 18,
   },
   timeline: { gap: 0 },
@@ -126,15 +121,15 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: Colors.textMuted,
+    backgroundColor: colors.textMuted,
   },
   timelineDotNew: {
-    backgroundColor: Colors.accentGreen,
+    backgroundColor: colors.accentGreen,
   },
   timelineLine: {
     width: 2,
     flex: 1,
-    backgroundColor: Colors.borderLight,
+    backgroundColor: colors.borderLight,
     marginTop: 4,
     minHeight: 40,
   },
@@ -142,19 +137,19 @@ const styles = StyleSheet.create({
   newsDate: {
     fontFamily: FontFamily.mono,
     fontSize: 7,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginBottom: 4,
   },
   newsTitle: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   newsBody: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.md,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     lineHeight: 18,
   },
 });

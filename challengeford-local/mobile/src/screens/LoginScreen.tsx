@@ -10,11 +10,15 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing, Radius } from '../theme';
+import { FontFamily, FontSize, Spacing, Radius, ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
 import { login } from '../services/api';
 import { sanitizeInput, isValidEmail } from '../utils/sanitize';
 
 export default function LoginScreen({ navigation }: any) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
@@ -63,7 +67,7 @@ export default function LoginScreen({ navigation }: any) {
             <TextInput
               style={styles.input}
               placeholder="admin@ford.com.br"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -78,7 +82,7 @@ export default function LoginScreen({ navigation }: any) {
             <TextInput
               style={styles.input}
               placeholder="••••••••"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={senha}
               onChangeText={setSenha}
               secureTextEntry
@@ -94,7 +98,7 @@ export default function LoginScreen({ navigation }: any) {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={Colors.textPrimary} />
+              <ActivityIndicator color="#f2f2f2" />
             ) : (
               <Text style={styles.btnText}>Entrar</Text>
             )}
@@ -107,8 +111,8 @@ export default function LoginScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: ColorScheme) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -119,45 +123,45 @@ const styles = StyleSheet.create({
   brand: {
     fontFamily: FontFamily.displayBold,
     fontSize: FontSize['4xl'],
-    color: Colors.accentBlue,
+    color: colors.accentBlue,
     letterSpacing: 8,
   },
   subtitle: {
     fontFamily: FontFamily.sansRegular,
     fontSize: FontSize.base,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
   },
   card: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.md,
     padding: Spacing.xl,
     gap: Spacing.base,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: colors.borderLight,
   },
   title: {
     fontFamily: FontFamily.displayBold,
     fontSize: FontSize.xl,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   field: { gap: Spacing.xs },
   label: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.md,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   input: {
-    backgroundColor: Colors.cardLight,
+    backgroundColor: colors.cardLight,
     borderRadius: Radius.sm,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: colors.borderLight,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     fontFamily: FontFamily.sansRegular,
     fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   error: {
     fontFamily: FontFamily.sansRegular,
@@ -166,7 +170,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   btn: {
-    backgroundColor: Colors.accentBlue,
+    backgroundColor: colors.accentBlue,
     borderRadius: Radius.sm,
     paddingVertical: Spacing.md,
     alignItems: 'center',
@@ -176,12 +180,12 @@ const styles = StyleSheet.create({
   btnText: {
     fontFamily: FontFamily.sansBold,
     fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    color: '#f2f2f2',
   },
   footer: {
     fontFamily: FontFamily.sansRegular,
     fontSize: FontSize.sm,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
   },
 });

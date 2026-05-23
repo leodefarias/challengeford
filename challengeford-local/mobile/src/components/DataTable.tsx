@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing } from '../theme';
+import { FontFamily, FontSize, Spacing, ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
 import SectionTitle from './SectionTitle';
 
 export interface DataRow {
@@ -16,6 +17,9 @@ interface Props {
 }
 
 export default function DataTable({ title, rows, columns = 2 }: Props) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   const col1 = rows.filter((_, i) => i % 2 === 0);
   const col2 = rows.filter((_, i) => i % 2 !== 0);
 
@@ -44,7 +48,7 @@ export default function DataTable({ title, rows, columns = 2 }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorScheme) => StyleSheet.create({
   container: {
     marginBottom: Spacing.xl,
   },
@@ -52,12 +56,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: colors.borderLight,
   },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    borderBottomColor: colors.borderLight,
   },
   cell: {
     flex: 1,
@@ -69,19 +73,19 @@ const styles = StyleSheet.create({
   },
   cellRight: {
     borderLeftWidth: 1,
-    borderLeftColor: Colors.borderLight,
+    borderLeftColor: colors.borderLight,
   },
   cellLabel: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: FontSize.base,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   cellValue: {
     fontFamily: FontFamily.mono,
     fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   highlight: {
-    color: Colors.accentGreen,
+    color: colors.accentGreen,
   },
 });
