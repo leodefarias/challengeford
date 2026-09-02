@@ -444,16 +444,18 @@ async def comparar(request: Request, req: ComparacaoRequest):
     """
     atributos_alvo = req.atributos or list(ATRIBUTOS_CORE)
     tabela: dict[str, dict] = {}
+    veiculos_ausentes: list[str] = []
 
     for v in req.veiculos:
         marca = v.get("marca", "")
         modelo = v.get("modelo", "")
         versao = v.get("versao", "")
+        nome = f"{marca} {modelo} {versao}"
         data = _carregar_catalogo(marca, modelo, versao)
         if not data:
+            veiculos_ausentes.append(nome)
             continue
         schema = data.get("catalogo", {}).get("schema", {})
-        nome = f"{marca} {modelo} {versao}"
         tabela[nome] = {a: schema.get(a) for a in atributos_alvo}
 
     if not tabela:
@@ -483,6 +485,7 @@ async def comparar(request: Request, req: ComparacaoRequest):
     return {
         "atributos_comparados": atributos_alvo,
         "veiculos": list(tabela.keys()),
+        "veiculos_ausentes": veiculos_ausentes,
         "tabela": tabela,
         "destaques": destaques,
     }

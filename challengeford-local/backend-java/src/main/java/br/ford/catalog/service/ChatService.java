@@ -58,7 +58,7 @@ public class ChatService {
                 .perguntaOriginal(pergunta)
                 .resposta(resposta)
                 .fontesCitadas(String.join(",", fontes))
-                .dataExpiracao(LocalDateTime.now().plusHours(24))
+                .dataExpiracao(LocalDateTime.now().plusDays(30))
                 .build();
         cacheRepository.save(entry);
 

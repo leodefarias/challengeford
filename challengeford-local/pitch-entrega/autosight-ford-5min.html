@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoSight — Ford Brasil · 5 min</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* === THEME: Bold Signal × Ford Blue === */
+    :root {
+      --bg-primary: #0a0e14;
+      --bg-secondary: #111820;
+      --card-bg: #003478;
+      --card-accent: #1a5fbf;
+      --accent: #00a2ff;
+      --accent-warm: #ff6b35;
+      --text-primary: #f4f7fb;
+      --text-secondary: #8fa3bc;
+      --text-on-card: #ffffff;
+      --font-display: "Archivo Black", sans-serif;
+      --font-body: "Space Grotesk", sans-serif;
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration-normal: 0.55s;
+      --title-size: clamp(1.75rem, 5.5vw, 4.5rem);
+      --h2-size: clamp(1.35rem, 3.8vw, 2.75rem);
+      --h3-size: clamp(0.95rem, 2vw, 1.35rem);
+      --subtitle-size: clamp(0.9rem, 2vw, 1.35rem);
+      --body-size: clamp(0.78rem, 1.4vw, 1.05rem);
+      --small-size: clamp(0.65rem, 1vw, 0.85rem);
+      --slide-padding: clamp(1.25rem, 4vw, 4rem);
+      --content-gap: clamp(0.6rem, 2vw, 1.75rem);
+      --element-gap: clamp(0.3rem, 1vw, 0.85rem);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.45;
+    }
+
+    /* ===========================================
+       VIEWPORT FITTING: MANDATORY BASE STYLES
+       Include this ENTIRE file in every presentation.
+       These styles ensure slides fit exactly in the viewport.
+       =========================================== */
+
+    /* 1. Lock html/body to viewport */
+    html, body {
+        height: 100%;
+        overflow-x: hidden;
+    }
+
+    html {
+        scroll-snap-type: y mandatory;
+        scroll-behavior: smooth;
+    }
+
+    /* 2. Each slide = exact viewport height */
+    .slide {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh; /* Dynamic viewport height for mobile browsers */
+        overflow: hidden; /* CRITICAL: Prevent ANY overflow */
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        background:
+          radial-gradient(ellipse 80% 60% at 10% 90%, rgba(0, 52, 120, 0.45) 0%, transparent 55%),
+          radial-gradient(ellipse 60% 50% at 90% 10%, rgba(0, 162, 255, 0.12) 0%, transparent 50%),
+          var(--bg-primary);
+    }
+
+    /* 3. Content container with flex for centering */
+    .slide-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        max-height: 100%;
+        overflow: hidden; /* Double-protection against overflow */
+        padding: var(--slide-padding);
+        padding-top: clamp(3rem, 8vh, 5rem);
+    }
+
+    /* 4. ALL typography uses clamp() for responsive scaling */
+    /* (custom properties already declared in :root above) */
+
+    /* 5. Cards/containers use viewport-relative max sizes */
+    .card, .container, .content-box {
+        max-width: min(90vw, 1000px);
+        max-height: min(80vh, 700px);
+    }
+
+    /* 6. Lists auto-scale with viewport */
+    .feature-list, .bullet-list {
+        gap: clamp(0.4rem, 1vh, 1rem);
+    }
+
+    .feature-list li, .bullet-list li {
+        font-size: var(--body-size);
+        line-height: 1.4;
+    }
+
+    /* 7. Grids adapt to available space */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+        gap: clamp(0.5rem, 1.5vw, 1rem);
+    }
+
+    /* 8. Images constrained to viewport */
+    img, .image-container {
+        max-width: 100%;
+        max-height: min(50vh, 400px);
+        object-fit: contain;
+    }
+
+    /* ===========================================
+       RESPONSIVE BREAKPOINTS
+       Aggressive scaling for smaller viewports
+       =========================================== */
+
+    /* Short viewports (< 700px height) */
+    @media (max-height: 700px) {
+        :root {
+            --slide-padding: clamp(0.75rem, 3vw, 2rem);
+            --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+            --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+            --h2-size: clamp(1rem, 3vw, 1.75rem);
+        }
+    }
+
+    /* Very short viewports (< 600px height) */
+    @media (max-height: 600px) {
+        :root {
+            --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+            --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+            --title-size: clamp(1.1rem, 4vw, 2rem);
+            --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+        }
+
+        /* Hide non-essential elements */
+        .nav-dots, .keyboard-hint, .decorative {
+            display: none;
+        }
+    }
+
+    /* Extremely short (landscape phones, < 500px height) */
+    @media (max-height: 500px) {
+        :root {
+            --slide-padding: clamp(0.4rem, 2vw, 1rem);
+            --title-size: clamp(1rem, 3.5vw, 1.5rem);
+            --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+            --body-size: clamp(0.65rem, 1vw, 0.85rem);
+        }
+    }
+
+    /* Narrow viewports (< 600px width) */
+    @media (max-width: 600px) {
+        :root {
+            --title-size: clamp(1.25rem, 7vw, 2.5rem);
+        }
+
+        /* Stack grids vertically */
+        .grid {
+            grid-template-columns: 1fr;
+        }
+
+        .pain-grid,
+        .ask-grid,
+        .cap-grid,
+        .trust-row {
+          grid-template-columns: 1fr;
+        }
+    }
+
+    /* ===========================================
+       REDUCED MOTION
+       Respect user preferences
+       =========================================== */
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.2s !important;
+        }
+
+        html {
+            scroll-behavior: auto;
+        }
+    }
+
+    /* === SLIDE CHROME === */
+    .slide-header {
+      position: absolute;
+      top: clamp(0.75rem, 2vh, 1.5rem);
+      left: var(--slide-padding);
+      right: var(--slide-padding);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .slide-number {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 6vw, 4rem);
+      font-weight: 400;
+      color: rgba(255,255,255,0.07);
+      line-height: 1;
+    }
+
+    .brand-tag {
+      font-size: var(--small-size);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-warm));
+      width: 0%;
+      z-index: 1000;
+      transition: width 0.25s ease;
+    }
+
+    .nav-dots {
+      position: fixed;
+      right: clamp(0.5rem, 2vw, 1.25rem);
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      z-index: 100;
+    }
+
+    .nav-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.25s ease;
+    }
+
+    .nav-dot.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.35);
+    }
+
+    .keyboard-hint {
+      position: fixed;
+      bottom: clamp(0.5rem, 2vh, 1rem);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: var(--small-size);
+      color: rgba(255,255,255,0.25);
+      z-index: 50;
+    }
+
+    /* === TYPOGRAPHY === */
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      line-height: 1.08;
+    }
+
+    h1 { font-size: var(--title-size); letter-spacing: -0.02em; }
+    h2 { font-size: var(--h2-size); margin-bottom: var(--content-gap); }
+    h3 { font-size: var(--h3-size); color: var(--accent); margin-bottom: var(--element-gap); }
+
+    .subtitle {
+      font-size: var(--subtitle-size);
+      color: var(--text-secondary);
+      max-width: 38ch;
+      margin-top: var(--content-gap);
+    }
+
+    .accent-line {
+      width: clamp(3rem, 8vw, 5rem);
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      margin-bottom: var(--content-gap);
+    }
+
+    /* === TITLE SLIDE === */
+    .title-slide .slide-content {
+      justify-content: flex-end;
+      padding-bottom: clamp(2rem, 8vh, 5rem);
+    }
+
+    .hero-card {
+      background: linear-gradient(135deg, var(--card-bg) 0%, var(--card-accent) 100%);
+      border-radius: clamp(0.5rem, 1.5vw, 1rem);
+      padding: clamp(1rem, 3vw, 2rem);
+      max-width: min(85vw, 560px);
+      margin-bottom: var(--content-gap);
+      box-shadow: 0 24px 64px rgba(0, 52, 120, 0.45);
+    }
+
+    .hero-card h1 { color: var(--text-on-card); font-size: clamp(2rem, 7vw, 5rem); }
+    .hero-card .tagline {
+      font-size: var(--subtitle-size);
+      color: rgba(255,255,255,0.85);
+      margin-top: 0.5rem;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: clamp(0.5rem, 2vw, 1.5rem);
+      font-size: var(--small-size);
+      color: var(--text-secondary);
+      margin-top: var(--content-gap);
+    }
+
+    .meta-row span { display: flex; align-items: center; gap: 0.4em; }
+    .meta-row span::before { content: ""; width: 0.4em; height: 0.4em; background: var(--accent); transform: rotate(45deg); }
+
+    /* === STAT / PAIN CARDS === */
+    .pain-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(0.5rem, 1.5vw, 1rem);
+      max-width: min(92vw, 1000px);
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: clamp(0.4rem, 1vw, 0.75rem);
+      padding: clamp(0.75rem, 1.8vw, 1.35rem);
+      max-height: min(40vh, 280px);
+    }
+
+    .stat-card .value {
+      font-family: var(--font-display);
+      font-size: clamp(1.35rem, 3.2vw, 2.15rem);
+      color: var(--accent);
+      line-height: 1.1;
+      margin-bottom: 0.35rem;
+    }
+
+    .stat-card .label {
+      font-size: var(--small-size);
+      color: var(--text-secondary);
+    }
+
+    /* === VEHICLE PILLS + CAPABILITIES === */
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: clamp(0.75rem, 2vw, 1.5rem);
+      max-width: min(92vw, 1100px);
+      align-items: start;
+    }
+
+    .pill-col {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.3rem, 0.9vh, 0.55rem);
+    }
+
+    .vehicle-pill {
+      background: rgba(255,255,255,0.05);
+      border-left: 3px solid var(--accent);
+      padding: clamp(0.3rem, 0.9vw, 0.5rem) clamp(0.5rem, 1.2vw, 0.75rem);
+      font-size: var(--small-size);
+      border-radius: 0 0.35rem 0.35rem 0;
+    }
+
+    .vehicle-pill.ford {
+      border-left-color: var(--accent-warm);
+      background: rgba(255, 107, 53, 0.08);
+    }
+
+    .cap-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(0.4rem, 1.2vw, 0.75rem);
+    }
+
+    .cap-grid .stat-card h3 { margin-bottom: 0.2rem; }
+    .cap-grid .stat-card { padding: clamp(0.55rem, 1.3vw, 1rem); }
+
+    /* === BEFORE / AFTER (ganho) === */
+    .gain-list {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.45rem, 1.4vh, 0.85rem);
+      max-width: min(92vw, 1000px);
+    }
+
+    .gain-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: clamp(0.4rem, 1.2vw, 0.9rem);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: clamp(0.4rem, 1vw, 0.75rem);
+      padding: clamp(0.55rem, 1.4vw, 1rem) clamp(0.7rem, 1.6vw, 1.2rem);
+    }
+
+    .gain-side .kicker {
+      font-size: var(--small-size);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 0.2rem;
+    }
+
+    .gain-side .value {
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 2.2vw, 1.55rem);
+      line-height: 1.15;
+    }
+
+    .gain-side.after .value { color: var(--accent); }
+    .gain-arrow {
+      color: var(--accent);
+      font-size: clamp(1.1rem, 2vw, 1.5rem);
+      opacity: 0.7;
+    }
+
+    /* === ASK === */
+    .ask-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(0.5rem, 1.5vw, 1rem);
+      max-width: min(92vw, 1100px);
+    }
+
+    .ask-num {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 3vw, 2.25rem);
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: var(--element-gap);
+    }
+
+    .ask-grid p {
+      font-size: var(--body-size);
+      color: var(--text-secondary);
+    }
+
+    /* === QR DEMO === */
+    .demo-split {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: clamp(0.75rem, 2.5vw, 2rem);
+      align-items: center;
+      max-width: min(92vw, 1100px);
+    }
+
+    .qr-card {
+      background: #ffffff;
+      padding: clamp(0.45rem, 1.2vw, 0.7rem);
+      border-radius: clamp(0.4rem, 1vw, 0.75rem);
+      box-shadow: 0 16px 40px rgba(0, 162, 255, 0.18);
+    }
+
+    .qr-card img {
+      display: block;
+      width: clamp(7.5rem, 22vh, 12.5rem);
+      height: clamp(7.5rem, 22vh, 12.5rem);
+      image-rendering: pixelated;
+    }
+
+    .qr-meta {
+      margin-top: clamp(0.4rem, 1vh, 0.7rem);
+      font-size: var(--small-size);
+      color: var(--text-secondary);
+      max-width: clamp(8rem, 22vh, 13rem);
+      word-break: break-all;
+    }
+
+    .title-qr {
+      position: absolute;
+      right: var(--slide-padding);
+      bottom: clamp(2rem, 8vh, 5rem);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.4rem;
+      z-index: 8;
+    }
+
+    .title-qr img {
+      width: clamp(5.5rem, 16vh, 8.5rem);
+      height: clamp(5.5rem, 16vh, 8.5rem);
+      display: block;
+      background: #fff;
+      padding: 0.35rem;
+      border-radius: 0.45rem;
+    }
+
+    .title-qr span {
+      font-size: var(--small-size);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* === REVEAL ANIMATIONS === */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity var(--duration-normal) var(--ease-out-expo),
+                  transform var(--duration-normal) var(--ease-out-expo);
+    }
+
+    .slide.visible .reveal {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal:nth-child(1) { transition-delay: 0.05s; }
+    .reveal:nth-child(2) { transition-delay: 0.12s; }
+    .reveal:nth-child(3) { transition-delay: 0.19s; }
+    .reveal:nth-child(4) { transition-delay: 0.26s; }
+    .reveal:nth-child(5) { transition-delay: 0.33s; }
+
+    @media (max-width: 800px) {
+      .split, .pain-grid, .ask-grid, .demo-split {
+        grid-template-columns: 1fr;
+      }
+      .cap-grid { grid-template-columns: 1fr 1fr; }
+      .gain-row { grid-template-columns: 1fr; }
+      .gain-arrow { display: none; }
+      .title-qr { position: static; margin-top: var(--content-gap); align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar" id="progressBar"></div>
+  <nav class="nav-dots" id="navDots" aria-label="Navegação de slides"></nav>
+  <p class="keyboard-hint">← → ou Espaço para navegar</p>
+
+  <!--
+    SPEAKER 01 · 0:00–0:25
+    Nome + o recorte Ford. Sem tour de telas.
+    NÃO DIZER: FIAP, RM, sprint, já em produção.
+  -->
+  <section class="slide title-slide" data-title="AutoSight">
+    <div class="slide-header">
+      <span class="brand-tag">Ford Brasil</span>
+      <span class="slide-number">01</span>
+    </div>
+    <div class="slide-content">
+      <div class="hero-card reveal">
+        <h1>AutoSight</h1>
+        <p class="tagline">O problema da Ford — e o que o app resolve</p>
+      </div>
+      <p class="subtitle reveal">Ranger Raptor versus o cluster pickup premium no Brasil.</p>
+      <div class="title-qr reveal">
+        <img data-demo-qr alt="QR do app AutoSight" />
+        <span>Abrir o app</span>
+      </div>
+    </div>
+  </section>
+
+  <!--
+    SPEAKER 02 · 0:25–1:30
+    Problema da Ford, não mercado genérico. Sem 80h como fato.
+  -->
+  <section class="slide" data-title="Problema">
+    <div class="slide-header">
+      <span class="brand-tag">O problema da Ford</span>
+      <span class="slide-number">02</span>
+    </div>
+    <div class="slide-content">
+      <div class="accent-line reveal"></div>
+      <h2 class="reveal">Produto e marketing comparam o Raptor no Excel</h2>
+      <div class="pain-grid reveal">
+        <div class="stat-card">
+          <div class="value">3–5 dias</div>
+          <div class="label">transcrevendo PDF da Hilux, Amarok, S10, Triton, Frontier</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">Sem fonte</div>
+          <div class="label">o torque na célula não diz de qual catálogo veio</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">Mensal</div>
+          <div class="label">campanha e spec saem com catálogo de ontem</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!--
+    SPEAKER 03 · 1:30–3:10  CORAÇÃO
+    O que o app resolve, 1:1 com o problema. Sem tour de tela.
+    Se atrasar > 2:50, uma frase por linha e vá ao 04.
+  -->
+  <section class="slide" data-title="Resolve">
+    <div class="slide-header">
+      <span class="brand-tag">O que o app resolve</span>
+      <span class="slide-number">03</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">Tira o analista da transcrição e deixa a decisão</h2>
+      <div class="gain-list reveal">
+        <div class="gain-row">
+          <div class="gain-side">
+            <div class="kicker">Ford hoje</div>
+            <div class="value">Dias copiando spec</div>
+          </div>
+          <span class="gain-arrow" aria-hidden="true">→</span>
+          <div class="gain-side after">
+            <div class="kicker">AutoSight</div>
+            <div class="value">Extração on-demand, ficha pronta</div>
+          </div>
+        </div>
+        <div class="gain-row">
+          <div class="gain-side">
+            <div class="kicker">Ford hoje</div>
+            <div class="value">Número sem origem</div>
+          </div>
+          <span class="gain-arrow" aria-hidden="true">→</span>
+          <div class="gain-side after">
+            <div class="kicker">AutoSight</div>
+            <div class="value">Fonte na spec; vazio se incerto</div>
+          </div>
+        </div>
+        <div class="gain-row">
+          <div class="gain-side">
+            <div class="kicker">Ford hoje</div>
+            <div class="value">Nova pergunta, nova planilha</div>
+          </div>
+          <span class="gain-arrow" aria-hidden="true">→</span>
+          <div class="gain-side after">
+            <div class="kicker">AutoSight</div>
+            <div class="value">Compara, rankeia, aponta gap, responde em PT-BR</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!--
+    SPEAKER 04 · 3:10–4:00
+    Prova de que não é conceitual: 6 modelos no ar. Sem tour.
+  -->
+  <section class="slide" data-title="POC">
+    <div class="slide-header">
+      <span class="brand-tag">Já no app</span>
+      <span class="slide-number">04</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">Seis pickups. O cluster que a Ford já monitora.</h2>
+      <div class="split reveal">
+        <div class="pill-col">
+          <div class="vehicle-pill ford"><strong>Ford</strong> Ranger Raptor</div>
+          <div class="vehicle-pill">Toyota Hilux GR-S</div>
+          <div class="vehicle-pill">VW Amarok V6 Extreme</div>
+          <div class="vehicle-pill">Chevrolet S10 High Country</div>
+          <div class="vehicle-pill">Mitsubishi Nova-Triton HPE-S</div>
+          <div class="vehicle-pill">Nissan Frontier PRO-4X</div>
+        </div>
+        <div class="cap-grid">
+          <div class="stat-card">
+            <h3>Comparativo</h3>
+            <div class="label">Raptor vs rivais, spec a spec</div>
+          </div>
+          <div class="stat-card">
+            <h3>Ranking</h3>
+            <div class="label">Família, off-road, desempenho, custo</div>
+          </div>
+          <div class="stat-card">
+            <h3>Gaps</h3>
+            <div class="label">Onde o Raptor perde no cluster</div>
+          </div>
+          <div class="stat-card">
+            <h3>Chat</h3>
+            <div class="label">Pergunta em português sobre o catálogo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!--
+    SPEAKER 05 · 4:00–4:30  NUNCA CORTAR
+    QR: abrir slides com ?app=http://IP:8081  (ver roteiro).
+  -->
+  <section class="slide" data-title="Pedido">
+    <div class="slide-header">
+      <span class="brand-tag">Feedback</span>
+      <span class="slide-number">05</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">É este o problema — e resolve?</h2>
+      <div class="demo-split reveal">
+        <div>
+          <div class="qr-card">
+            <img data-demo-qr alt="QR do app AutoSight" />
+          </div>
+          <p class="qr-meta" data-demo-url></p>
+        </div>
+        <div class="ask-grid" style="grid-template-columns: 1fr;">
+          <div class="stat-card">
+            <div class="ask-num">01</div>
+            <p>O time ainda perde dias no Excel deste cluster?</p>
+          </div>
+          <div class="stat-card">
+            <div class="ask-num">02</div>
+            <p>O que o app deveria destravar primeiro: spec, campanha ou venda?</p>
+          </div>
+          <div class="stat-card">
+            <div class="ask-num">03</div>
+            <p>O que falta para um piloto de um ciclo?</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    /* === SLIDE PRESENTATION CONTROLLER === */
+    class SlidePresentation {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.currentSlide = 0;
+        this.progressBar = document.getElementById('progressBar');
+        this.navDotsContainer = document.getElementById('navDots');
+        this.setupIntersectionObserver();
+        this.setupKeyboardNav();
+        this.setupWheelNav();
+        this.setupTouchNav();
+        this.setupNavDots();
+        this.updateProgress(0);
+      }
+
+      setupIntersectionObserver() {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              const idx = this.slides.indexOf(entry.target);
+              if (idx >= 0) {
+                this.currentSlide = idx;
+                this.updateProgress(idx);
+                this.updateDots(idx);
+              }
+            }
+          });
+        }, { threshold: 0.55 });
+        this.slides.forEach(slide => observer.observe(slide));
+      }
+
+      setupKeyboardNav() {
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+            e.preventDefault();
+            this.goTo(this.currentSlide + 1);
+          } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
+            e.preventDefault();
+            this.goTo(this.currentSlide - 1);
+          } else if (e.key === 'Home') {
+            this.goTo(0);
+          } else if (e.key === 'End') {
+            this.goTo(this.slides.length - 1);
+          }
+        });
+      }
+
+      setupWheelNav() {
+        let wheelTimeout;
+        document.addEventListener('wheel', (e) => {
+          clearTimeout(wheelTimeout);
+          wheelTimeout = setTimeout(() => {
+            if (Math.abs(e.deltaY) < 20) return;
+            if (e.deltaY > 0) this.goTo(this.currentSlide + 1);
+            else this.goTo(this.currentSlide - 1);
+          }, 80);
+        }, { passive: true });
+      }
+
+      setupTouchNav() {
+        let startY = 0;
+        document.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+          const diff = startY - e.changedTouches[0].clientY;
+          if (Math.abs(diff) > 50) {
+            if (diff > 0) this.goTo(this.currentSlide + 1);
+            else this.goTo(this.currentSlide - 1);
+          }
+        }, { passive: true });
+      }
+
+      setupNavDots() {
+        this.navDotsContainer.innerHTML = '';
+        this.slides.forEach((slide, i) => {
+          const dot = document.createElement('button');
+          dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+          dot.setAttribute('aria-label', slide.dataset.title || `Slide ${i + 1}`);
+          dot.addEventListener('click', () => this.goTo(i));
+          this.navDotsContainer.appendChild(dot);
+        });
+        this.dots = this.navDotsContainer.querySelectorAll('.nav-dot');
+      }
+
+      goTo(index) {
+        if (index < 0 || index >= this.slides.length) return;
+        this.slides[index].scrollIntoView({ behavior: 'smooth' });
+      }
+
+      updateProgress(index) {
+        const pct = ((index + 1) / this.slides.length) * 100;
+        this.progressBar.style.width = pct + '%';
+      }
+
+      updateDots(index) {
+        if (!this.dots) return;
+        this.dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+      }
+    }
+
+    new SlidePresentation();
+
+    /* Demo QR: autosight-ford-5min.html?app=http://SEU_IP:8081
+       The URL is stored in localStorage after the first open with ?app= */
+    (function bindDemoQr() {
+      const params = new URLSearchParams(window.location.search);
+      const fromQuery = params.get('app');
+      if (fromQuery) {
+        try { localStorage.setItem('autosightDemoUrl', fromQuery); } catch (e) { /* private mode */ }
+      }
+      let url = fromQuery;
+      if (!url) {
+        try { url = localStorage.getItem('autosightDemoUrl'); } catch (e) { url = null; }
+      }
+      if (!url) url = 'http://localhost:8081';
+
+      const src = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=8&data='
+        + encodeURIComponent(url);
+
+      document.querySelectorAll('[data-demo-qr]').forEach((img) => {
+        img.src = src;
+        img.alt = 'QR para ' + url;
+        img.addEventListener('error', () => { img.style.display = 'none'; });
+      });
+      document.querySelectorAll('[data-demo-url]').forEach((el) => {
+        el.textContent = url;
+      });
+    })();
+  </script>
+</body>
+</html>

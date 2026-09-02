@@ -330,7 +330,16 @@ class AgenteCatalogo:
             )
 
         # Injeta identificação obrigatória
-        atributos_finais.update({"marca": marca.lower(), "modelo": modelo, "versao": versao, "ano_modelo": 2025, "segmento": "pickup"})
+        ano_modelo = atributos_finais.get("ano_modelo")
+        if ano_modelo is None:
+            ano_modelo = 2025
+        atributos_finais.update({
+            "marca": marca.lower(),
+            "modelo": modelo,
+            "versao": versao,
+            "ano_modelo": ano_modelo,
+            "segmento": "pickup",
+        })
 
         # ------------------------------------------------------------------
         # PASSO 7 — MONTA CatalogoSchema (ignora campos inválidos)

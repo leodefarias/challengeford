@@ -13,4 +13,6 @@ public interface TermoPendenteRepository extends JpaRepository<TermoPendenteEnti
     List<TermoPendenteEntity> findByStatus(TermoStatus status);
 
     List<TermoPendenteEntity> findByStatusOrderByDataDetectadoDesc(TermoStatus status);
+
+    boolean existsByTermoIgnoreCaseAndFonteAndStatus(String termo, String fonte, TermoStatus status);
 }

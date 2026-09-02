@@ -33,13 +33,13 @@
       "angulo_rampa_graus": null,
       "profundidade_vadeo_mm": 600,
       "airbags_quantidade": 6,
-      "frenagem_autonoma": false,
-      "aviso_colisao_frontal": false,
-      "manutencao_faixa": false,
-      "monitoramento_ponto_cego": false,
+      "frenagem_autonoma": true,
+      "aviso_colisao_frontal": true,
+      "manutencao_faixa": true,
+      "monitoramento_ponto_cego": true,
       "camera_re": true,
-      "camera_360": false,
-      "controle_cruzeiro_adaptativo": false,
+      "camera_360": true,
+      "controle_cruzeiro_adaptativo": true,
       "estacionamento_automatico": null,
       "tela_central_pol": 8.0,
       "painel_digital_pol": 5.0,
@@ -288,7 +288,7 @@
         "schema_nivel": "core"
       },
       "frenagem_autonoma": {
-        "valor": "False",
+        "valor": "True",
         "confianca": 0.95,
         "fonte_primaria": "seed_manual",
         "mercado_confirmado_br": true,
@@ -296,7 +296,7 @@
         "schema_nivel": "estendido"
       },
       "aviso_colisao_frontal": {
-        "valor": "False",
+        "valor": "True",
         "confianca": 0.95,
         "fonte_primaria": "seed_manual",
         "mercado_confirmado_br": true,
@@ -304,7 +304,7 @@
         "schema_nivel": "estendido"
       },
       "manutencao_faixa": {
-        "valor": "False",
+        "valor": "True",
         "confianca": 0.95,
         "fonte_primaria": "seed_manual",
         "mercado_confirmado_br": true,
@@ -312,7 +312,7 @@
         "schema_nivel": "estendido"
       },
       "monitoramento_ponto_cego": {
-        "valor": "False",
+        "valor": "True",
         "confianca": 0.95,
         "fonte_primaria": "seed_manual",
         "mercado_confirmado_br": true,
@@ -328,7 +328,7 @@
         "schema_nivel": "core"
       },
       "camera_360": {
-        "valor": "False",
+        "valor": "True",
         "confianca": 0.95,
         "fonte_primaria": "seed_manual",
         "mercado_confirmado_br": true,
@@ -336,7 +336,7 @@
         "schema_nivel": "estendido"
       },
       "controle_cruzeiro_adaptativo": {
-        "valor": "False",
+        "valor": "True",
         "confianca": 0.95,
         "fonte_primaria": "seed_manual",
         "mercado_confirmado_br": true,

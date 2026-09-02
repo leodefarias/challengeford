@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { FontFamily, FontSize, Spacing, Radius, ColorScheme } from '../theme';
 import { useTheme } from '../theme/ThemeContext';
 import BackHeader from '../components/BackHeader';
+import { postRanking } from '../services/api';
+import {
+  SCORE_CATEGORIES,
+  DEFAULT_CATEGORY_WEIGHTS,
+  buildCriteriosFromWeights,
+  saveCustomCriterios,
+} from '../utils/scoreSettings';
 
 interface Weight {
   key: string;
@@ -11,21 +18,18 @@ interface Weight {
   value: number;
 }
 
-const INITIAL_WEIGHTS: Weight[] = [
-  { key: 'motorizacao', label: 'Motorização', value: 40 },
-  { key: 'seguranca', label: 'Segurança & ADAS', value: 20 },
-  { key: 'offroad', label: 'Off-Road', value: 15 },
-  { key: 'conforto', label: 'Conforto & Conect.', value: 10 },
-  { key: 'tracao', label: 'Transmissão & Tração', value: 5 },
-  { key: 'preco', label: 'Preço', value: 5 },
-  { key: 'dimensoes', label: 'Dimensões', value: 5 },
-];
-
 export default function ScoreSettingsScreen({ navigation }: any) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
-  const [weights, setWeights] = useState<Weight[]>(INITIAL_WEIGHTS);
+  const [weights, setWeights] = useState<Weight[]>(
+    SCORE_CATEGORIES.map((c) => ({
+      key: c.key,
+      label: c.label,
+      value: DEFAULT_CATEGORY_WEIGHTS[c.key] ?? 0,
+    }))
+  );
+  const [saving, setSaving] = useState(false);
 
   const update = (key: string, val: number) => {
     setWeights((prev) => prev.map((w) => (w.key === key ? { ...w, value: Math.round(val) } : w)));
@@ -34,13 +38,32 @@ export default function ScoreSettingsScreen({ navigation }: any) {
   const total = weights.reduce((sum, w) => sum + w.value, 0);
   const valid = total === 100;
 
+  const handleSave = async () => {
+    if (!valid) return;
+    setSaving(true);
+    try {
+      const weightMap = Object.fromEntries(weights.map((w) => [w.key, w.value]));
+      const criterios = buildCriteriosFromWeights(weightMap);
+      await saveCustomCriterios(criterios);
+      await postRanking(criterios);
+      Alert.alert('Salvo', 'Pesos aplicados ao ranking personalizado.');
+      navigation?.goBack();
+    } catch (e) {
+      Alert.alert('Erro', (e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <BackHeader navigation={navigation} title="Config. Score" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
         <Text style={styles.title}>Configuração de Score</Text>
-        <Text style={styles.subtitle}>Ajuste os pesos por grupo e perfis de competição por catálogo Ford.</Text>
+        <Text style={styles.subtitle}>
+          Ajuste os pesos por categoria. Ao salvar, o ranking personalizado é recalculado via API.
+        </Text>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Peso por categoria</Text>
@@ -71,11 +94,15 @@ export default function ScoreSettingsScreen({ navigation }: any) {
           </View>
 
           <TouchableOpacity
-            style={[styles.saveBtn, !valid && { opacity: 0.4 }]}
-            disabled={!valid}
-            onPress={() => navigation?.goBack()}
+            style={[styles.saveBtn, (!valid || saving) && { opacity: 0.4 }]}
+            disabled={!valid || saving}
+            onPress={handleSave}
           >
-            <Text style={styles.saveBtnText}>Salvar Configurações</Text>
+            {saving ? (
+              <ActivityIndicator color="#f2f2f2" />
+            ) : (
+              <Text style={styles.saveBtnText}>Salvar Configurações</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

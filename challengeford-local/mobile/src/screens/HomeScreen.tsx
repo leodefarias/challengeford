@@ -299,9 +299,9 @@ export default function HomeScreen({ navigation }: any) {
                     <Animated.View style={[styles.cardFlex, { opacity: cardAnims[3].opacity, transform: [{ translateY: cardAnims[3].translateY }] }]}>
                       <MetricCard
                         label="SCORE COMPETITIVO"
-                        scoreValue={scoreTecnico > 0 ? Math.round(scoreTecnico) : 0}
+                        scoreValue={scoreTecnico > 0 ? Math.round(scoreTecnico * 100) : 0}
                         scoreLabel="Técnico"
-                        scoreSubLabel={detalhe?.scoreValor ? `Valor: ${detalhe.scoreValor.toFixed(1)}` : 'Valor: —'}
+                        scoreSubLabel={detalhe?.scoreValor ? `Valor: ${(detalhe.scoreValor * 100).toFixed(0)}` : 'Valor: —'}
                       />
                     </Animated.View>
                   </View>

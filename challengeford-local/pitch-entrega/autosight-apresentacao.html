@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoSight — Inteligência Competitiva Ford</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* === THEME: Ford Signal (Bold Signal + Ford Blue) === */
+    :root {
+      --bg-primary: #0a0e14;
+      --bg-secondary: #111820;
+      --card-bg: #003478;
+      --card-accent: #1a5fbf;
+      --accent: #00a2ff;
+      --accent-warm: #ff6b35;
+      --text-primary: #f4f7fb;
+      --text-secondary: #8fa3bc;
+      --text-on-card: #ffffff;
+      --font-display: "Syne", sans-serif;
+      --font-body: "DM Sans", sans-serif;
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration-normal: 0.65s;
+      --title-size: clamp(1.75rem, 5.5vw, 4.5rem);
+      --subtitle-size: clamp(0.9rem, 2vw, 1.35rem);
+      --body-size: clamp(0.78rem, 1.4vw, 1.05rem);
+      --small-size: clamp(0.65rem, 1vw, 0.85rem);
+      --slide-padding: clamp(1.25rem, 4vw, 4rem);
+      --content-gap: clamp(0.6rem, 2vw, 1.75rem);
+      --element-gap: clamp(0.3rem, 1vw, 0.85rem);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.45;
+    }
+
+    /* === VIEWPORT BASE (mandatory) === */
+    html, body { height: 100%; overflow-x: hidden; }
+    html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+
+    .slide {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 90%, rgba(0, 52, 120, 0.45) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 50% at 90% 10%, rgba(0, 162, 255, 0.12) 0%, transparent 50%),
+        var(--bg-primary);
+    }
+
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      max-height: 100%;
+      overflow: hidden;
+      padding: var(--slide-padding);
+      padding-top: clamp(3rem, 8vh, 5rem);
+    }
+
+    .card, .content-box { max-width: min(92vw, 1100px); max-height: min(80vh, 700px); }
+
+    .bullet-list { list-style: none; display: flex; flex-direction: column; gap: clamp(0.35rem, 1vh, 0.85rem); }
+    .bullet-list li {
+      font-size: var(--body-size);
+      padding-left: 1.2em;
+      position: relative;
+      color: var(--text-secondary);
+    }
+    .bullet-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.55em;
+      width: 0.45em;
+      height: 0.45em;
+      background: var(--accent);
+      border-radius: 1px;
+      transform: rotate(45deg);
+    }
+    .bullet-list li strong { color: var(--text-primary); font-weight: 600; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+      gap: clamp(0.5rem, 1.5vw, 1rem);
+      max-width: min(92vw, 1000px);
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+      gap: clamp(0.45rem, 1.2vw, 0.85rem);
+      max-width: min(92vw, 1000px);
+    }
+
+    @media (max-height: 700px) {
+      :root {
+        --slide-padding: clamp(0.75rem, 3vw, 2rem);
+        --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+        --title-size: clamp(1.35rem, 4.5vw, 2.5rem);
+      }
+    }
+    @media (max-height: 600px) {
+      :root {
+        --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+        --title-size: clamp(1.1rem, 4vw, 2rem);
+        --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+      }
+      .nav-dots, .keyboard-hint, .slide-number { display: none; }
+    }
+    @media (max-height: 500px) {
+      :root {
+        --slide-padding: clamp(0.4rem, 2vw, 1rem);
+        --title-size: clamp(1rem, 3.5vw, 1.5rem);
+      }
+    }
+    @media (max-width: 600px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+      }
+      html { scroll-behavior: auto; }
+    }
+
+    /* === SLIDE CHROME === */
+    .slide-header {
+      position: absolute;
+      top: clamp(0.75rem, 2vh, 1.5rem);
+      left: var(--slide-padding);
+      right: var(--slide-padding);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .slide-number {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 6vw, 4rem);
+      font-weight: 800;
+      color: rgba(255,255,255,0.06);
+      line-height: 1;
+    }
+
+    .brand-tag {
+      font-size: var(--small-size);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-warm));
+      width: 0%;
+      z-index: 1000;
+      transition: width 0.25s ease;
+    }
+
+    .nav-dots {
+      position: fixed;
+      right: clamp(0.5rem, 2vw, 1.25rem);
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      z-index: 100;
+    }
+
+    .nav-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.25s ease;
+    }
+
+    .nav-dot.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.35);
+    }
+
+    .keyboard-hint {
+      position: fixed;
+      bottom: clamp(0.5rem, 2vh, 1rem);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: var(--small-size);
+      color: rgba(255,255,255,0.25);
+      z-index: 50;
+    }
+
+    /* === TYPOGRAPHY === */
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      line-height: 1.08;
+    }
+
+    h1 { font-size: var(--title-size); letter-spacing: -0.02em; }
+    h2 { font-size: clamp(1.35rem, 3.8vw, 2.75rem); margin-bottom: var(--content-gap); }
+    h3 { font-size: clamp(0.95rem, 2vw, 1.35rem); color: var(--accent); margin-bottom: var(--element-gap); }
+
+    .subtitle {
+      font-size: var(--subtitle-size);
+      color: var(--text-secondary);
+      max-width: 38ch;
+      margin-top: var(--content-gap);
+    }
+
+    .accent-line {
+      width: clamp(3rem, 8vw, 5rem);
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      margin-bottom: var(--content-gap);
+    }
+
+    /* === TITLE SLIDE === */
+    .title-slide .slide-content { justify-content: flex-end; padding-bottom: clamp(2rem, 8vh, 5rem); }
+
+    .hero-card {
+      background: linear-gradient(135deg, var(--card-bg) 0%, var(--card-accent) 100%);
+      border-radius: clamp(0.5rem, 1.5vw, 1rem);
+      padding: clamp(1rem, 3vw, 2rem);
+      max-width: min(85vw, 520px);
+      margin-bottom: var(--content-gap);
+      box-shadow: 0 24px 64px rgba(0, 52, 120, 0.45);
+    }
+
+    .hero-card h1 { color: var(--text-on-card); font-size: clamp(2rem, 7vw, 5rem); }
+    .hero-card .tagline {
+      font-size: var(--subtitle-size);
+      color: rgba(255,255,255,0.85);
+      margin-top: 0.5rem;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: clamp(0.5rem, 2vw, 1.5rem);
+      font-size: var(--small-size);
+      color: var(--text-secondary);
+      margin-top: var(--content-gap);
+    }
+
+    .meta-row span { display: flex; align-items: center; gap: 0.4em; }
+    .meta-row span::before { content: "◆"; color: var(--accent); font-size: 0.6em; }
+
+    /* === STAT CARDS === */
+    .stat-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: clamp(0.4rem, 1vw, 0.75rem);
+      padding: clamp(0.6rem, 1.5vw, 1rem);
+    }
+
+    .stat-card .value {
+      font-family: var(--font-display);
+      font-size: clamp(1.25rem, 3vw, 2rem);
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1.1;
+    }
+
+    .stat-card .label {
+      font-size: var(--small-size);
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+
+    /* === ARCH DIAGRAM === */
+    .arch-flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: clamp(0.35rem, 1vw, 0.6rem);
+      max-width: min(92vw, 900px);
+    }
+
+    .arch-node {
+      background: rgba(0, 162, 255, 0.12);
+      border: 1px solid rgba(0, 162, 255, 0.35);
+      border-radius: 0.4rem;
+      padding: clamp(0.35rem, 1vw, 0.6rem) clamp(0.5rem, 1.2vw, 0.85rem);
+      font-size: var(--small-size);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .arch-arrow { color: var(--accent); font-size: var(--body-size); opacity: 0.6; }
+
+    /* === VEHICLE PILLS === */
+    .vehicle-pill {
+      background: rgba(255,255,255,0.05);
+      border-left: 3px solid var(--accent);
+      padding: clamp(0.35rem, 1vw, 0.55rem) clamp(0.5rem, 1.2vw, 0.75rem);
+      font-size: var(--small-size);
+      border-radius: 0 0.35rem 0.35rem 0;
+    }
+
+    .vehicle-pill.ford {
+      border-left-color: var(--accent-warm);
+      background: rgba(255, 107, 53, 0.08);
+    }
+
+    /* === REVEAL ANIMATIONS === */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity var(--duration-normal) var(--ease-out-expo),
+                  transform var(--duration-normal) var(--ease-out-expo);
+    }
+
+    .slide.visible .reveal {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal:nth-child(1) { transition-delay: 0.05s; }
+    .reveal:nth-child(2) { transition-delay: 0.12s; }
+    .reveal:nth-child(3) { transition-delay: 0.19s; }
+    .reveal:nth-child(4) { transition-delay: 0.26s; }
+    .reveal:nth-child(5) { transition-delay: 0.33s; }
+    .reveal:nth-child(6) { transition-delay: 0.4s; }
+
+    /* === CLOSING === */
+    .closing-slide .hero-card { margin-bottom: 0; }
+    .closing-slide h2 { font-size: clamp(1.5rem, 4vw, 3rem); color: var(--text-primary); }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar" id="progressBar"></div>
+  <nav class="nav-dots" id="navDots" aria-label="Navegação de slides"></nav>
+  <p class="keyboard-hint">← → ou Espaço para navegar</p>
+
+  <!-- SLIDE 01: Título -->
+  <section class="slide title-slide" data-title="AutoSight">
+    <div class="slide-header">
+      <span class="brand-tag">Ford Brasil × FIAP</span>
+      <span class="slide-number">01</span>
+    </div>
+    <div class="slide-content">
+      <div class="hero-card reveal">
+        <h1>AutoSight</h1>
+        <p class="tagline">Inteligência Competitiva Automotiva Powered by AI</p>
+      </div>
+      <p class="subtitle reveal">Automatize a análise de catálogos de pickups premium — Ford vs 5 concorrentes — com IA, RAG e insights no celular do analista.</p>
+      <div class="meta-row reveal">
+        <span>FIAP Challenge Autosight</span>
+        <span>Equipe AutoSight</span>
+        <span>2025–2026</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 02: Problema -->
+  <section class="slide" data-title="O Problema">
+    <div class="slide-header">
+      <span class="brand-tag">Contexto</span>
+      <span class="slide-number">02</span>
+    </div>
+    <div class="slide-content">
+      <div class="accent-line reveal"></div>
+      <h2 class="reveal">Análise manual, lenta e arriscada</h2>
+      <ul class="bullet-list reveal">
+        <li><strong>3–5 dias</strong> por ciclo completo de análise competitiva</li>
+        <li><strong>~80 horas/mês</strong> de analista sênior em transcrição manual</li>
+        <li><strong>~50 atributos</strong> por veículo, sem rastreabilidade de fonte</li>
+        <li><strong>30 dias</strong> com dados potencialmente desatualizados</li>
+        <li>Erros de transcrição impactam <strong>pricing e posicionamento</strong></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SLIDE 03: Mercado -->
+  <section class="slide" data-title="Mercado">
+    <div class="slide-header">
+      <span class="brand-tag">Oportunidade</span>
+      <span class="slide-number">03</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">Um mercado de bilhões</h2>
+      <div class="grid-2 reveal">
+        <div class="stat-card">
+          <div class="value">R$ 8B+</div>
+          <div class="label">Mercado de pickups no Brasil / ano</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">US$ 10B</div>
+          <div class="label">Competitive Intelligence global (2024)</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">2–5%</div>
+          <div class="label">Margem perdida por erros de posicionamento (McKinsey)</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">67%</div>
+          <div class="label">Empresas ainda usam processos manuais (Gartner)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 04: Solução -->
+  <section class="slide" data-title="Solução">
+    <div class="slide-header">
+      <span class="brand-tag">AutoSight</span>
+      <span class="slide-number">04</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">Da fonte bruta ao insight</h2>
+      <ul class="bullet-list reveal">
+        <li><strong>Extrai</strong> specs de PDFs, sites, iCarros e FIPE</li>
+        <li><strong>Normaliza</strong> ~50 atributos em schema canônico</li>
+        <li><strong>Compara</strong> Ford vs cluster lado a lado</li>
+        <li><strong>Scoreia</strong> por perfil de comprador (4 personas)</li>
+        <li><strong>Identifica gaps</strong> competitivos acionáveis</li>
+        <li><strong>Responde</strong> perguntas em PT-BR via chat RAG</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SLIDE 05: Arquitetura -->
+  <section class="slide" data-title="Arquitetura">
+    <div class="slide-header">
+      <span class="brand-tag">Stack</span>
+      <span class="slide-number">05</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">Pipeline containerizado end-to-end</h2>
+      <div class="arch-flow reveal">
+        <span class="arch-node">📱 Mobile Expo</span>
+        <span class="arch-arrow">→</span>
+        <span class="arch-node">🔒 Nginx TLS</span>
+        <span class="arch-arrow">→</span>
+        <span class="arch-node">☕ Java API</span>
+        <span class="arch-arrow">→</span>
+        <span class="arch-node">🐍 Python IA</span>
+      </div>
+      <ul class="bullet-list reveal" style="margin-top: var(--content-gap);">
+        <li><strong>Oracle</strong> — persistência autoritativa (8 tabelas)</li>
+        <li><strong>ChromaDB</strong> — 4 coleções vetoriais para RAG</li>
+        <li><strong>GPT-4.1-mini</strong> — extração estruturada + chat</li>
+        <li>Mobile <strong>nunca</strong> acessa Python diretamente</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SLIDE 06: Veículos -->
+  <section class="slide" data-title="Cluster">
+    <div class="slide-header">
+      <span class="brand-tag">Pickups Premium</span>
+      <span class="slide-number">06</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">6 veículos monitorados</h2>
+      <div class="grid-3 reveal">
+        <div class="vehicle-pill ford"><strong>Ford</strong> Ranger Raptor</div>
+        <div class="vehicle-pill">Toyota Hilux GR-S</div>
+        <div class="vehicle-pill">VW Amarok V6 Extreme</div>
+        <div class="vehicle-pill">Chevrolet S10 High Country</div>
+        <div class="vehicle-pill">Mitsubishi Nova-Triton HPE-S</div>
+        <div class="vehicle-pill">Nissan Frontier PRO-4X</div>
+      </div>
+      <p class="subtitle reveal" style="margin-top: var(--content-gap);">Segmento de maior margem no portfólio de OEMs no Brasil.</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 07: Mecanismos de análise -->
+  <section class="slide" data-title="Análise">
+    <div class="slide-header">
+      <span class="brand-tag">Inteligência</span>
+      <span class="slide-number">07</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">4 formas de ver vantagens e gaps</h2>
+      <div class="grid-2 reveal">
+        <div class="stat-card">
+          <h3>Comparativo</h3>
+          <div class="label">2–6 veículos, atributo a atributo</div>
+        </div>
+        <div class="stat-card">
+          <h3>Ranking</h3>
+          <div class="label">4 perfis: desempenho, off-road, família, custo-benefício</div>
+        </div>
+        <div class="stat-card">
+          <h3>Gaps</h3>
+          <div class="label">Lacunas vs líder do cluster por capability</div>
+        </div>
+        <div class="stat-card">
+          <h3>Chat RAG</h3>
+          <div class="label">Perguntas em linguagem natural, cache 30 dias</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 08: Pipeline IA -->
+  <section class="slide" data-title="Pipeline IA">
+    <div class="slide-header">
+      <span class="brand-tag">Extração</span>
+      <span class="slide-number">08</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">Agente ReAct multi-fonte</h2>
+      <div class="arch-flow reveal">
+        <span class="arch-node">PDF</span>
+        <span class="arch-arrow">→</span>
+        <span class="arch-node">Playwright</span>
+        <span class="arch-arrow">→</span>
+        <span class="arch-node">Firecrawl</span>
+        <span class="arch-arrow">→</span>
+        <span class="arch-node">iCarros</span>
+        <span class="arch-arrow">→</span>
+        <span class="arch-node">FIPE</span>
+      </div>
+      <ul class="bullet-list reveal" style="margin-top: var(--content-gap);">
+        <li>Validação Pydantic + ranges de segmento</li>
+        <li>Política <strong>"null &gt; inventar"</strong> — zero alucinação</li>
+        <li>Fallback ChromaDB para gaps do schema core</li>
+        <li>Cada atributo com <strong>fonte_primaria</strong> e confiança</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SLIDE 09: Mobile -->
+  <section class="slide" data-title="Mobile">
+    <div class="slide-header">
+      <span class="brand-tag">App</span>
+      <span class="slide-number">09</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">12 telas para o analista Ford</h2>
+      <div class="grid-3 reveal">
+        <div class="vehicle-pill">Home — specs detalhadas</div>
+        <div class="vehicle-pill">Comparativo side-by-side</div>
+        <div class="vehicle-pill">Score + radar chart</div>
+        <div class="vehicle-pill">Gaps competitivos</div>
+        <div class="vehicle-pill">Chat RAG PT-BR</div>
+        <div class="vehicle-pill">Status Agent + Timeline</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: Segurança -->
+  <section class="slide" data-title="Segurança">
+    <div class="slide-header">
+      <span class="brand-tag">Governança</span>
+      <span class="slide-number">10</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">Segurança corporativa desde o POC</h2>
+      <ul class="bullet-list reveal">
+        <li>JWT 8h + RBAC (admin / analista / viewer)</li>
+        <li>AES-256 em repouso · BCrypt em senhas</li>
+        <li>Rate limiting · idempotência · audit log</li>
+        <li>Nginx TLS 1.2/1.3 · HSTS · CSP</li>
+        <li>LGPD: soft-delete de usuários (Flyway V5)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: Melhorias -->
+  <section class="slide" data-title="Melhorias">
+    <div class="slide-header">
+      <span class="brand-tag">Evolução</span>
+      <span class="slide-number">11</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">Correções e entregas recentes</h2>
+      <ul class="bullet-list reveal">
+        <li>Ranking persiste no Oracle (match case-insensitive)</li>
+        <li>Score Settings funcional com critérios customizados</li>
+        <li>Capabilities isoladas por perfil de competição</li>
+        <li>Dados validated montados no Docker · API só via TLS</li>
+        <li>ADAS S10 corrigido · testes Java + Python ampliados</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: Próximos passos -->
+  <section class="slide" data-title="Roadmap">
+    <div class="slide-header">
+      <span class="brand-tag">Futuro</span>
+      <span class="slide-number">12</span>
+    </div>
+    <div class="slide-content">
+      <h2 class="reveal">De POC a produto Ford</h2>
+      <ul class="bullet-list reveal">
+        <li>Re-extração agendada e alertas de dados envelhecidos</li>
+        <li>Expansão para novos segmentos e modelos</li>
+        <li>Dashboard web + tela de vantagens Ford</li>
+        <li>CI/CD com testes de contrato Java ↔ Python</li>
+        <li>Observabilidade: latência LLM, taxa de gaps, scraping</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SLIDE 13: Encerramento -->
+  <section class="slide closing-slide" data-title="Obrigado">
+    <div class="slide-header">
+      <span class="brand-tag">AutoSight</span>
+      <span class="slide-number">13</span>
+    </div>
+    <div class="slide-content">
+      <div class="hero-card reveal">
+        <h1>Obrigado</h1>
+        <p class="tagline">Inteligência competitiva que a Ford merece</p>
+      </div>
+      <p class="subtitle reveal">AutoSight — simplificando a análise de catálogos automotivos com IA.</p>
+      <div class="meta-row reveal">
+        <span>Equipe AutoSight · FIAP</span>
+        <span>Parceiro: Ford Brasil</span>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    /* === SLIDE PRESENTATION CONTROLLER === */
+    class SlidePresentation {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.currentSlide = 0;
+        this.progressBar = document.getElementById('progressBar');
+        this.navDotsContainer = document.getElementById('navDots');
+        this.setupIntersectionObserver();
+        this.setupKeyboardNav();
+        this.setupWheelNav();
+        this.setupTouchNav();
+        this.setupNavDots();
+        this.updateProgress(0);
+      }
+
+      setupIntersectionObserver() {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              const idx = this.slides.indexOf(entry.target);
+              if (idx >= 0) {
+                this.currentSlide = idx;
+                this.updateProgress(idx);
+                this.updateDots(idx);
+              }
+            }
+          });
+        }, { threshold: 0.55 });
+        this.slides.forEach(slide => observer.observe(slide));
+      }
+
+      setupKeyboardNav() {
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+            e.preventDefault();
+            this.goTo(this.currentSlide + 1);
+          } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
+            e.preventDefault();
+            this.goTo(this.currentSlide - 1);
+          } else if (e.key === 'Home') {
+            this.goTo(0);
+          } else if (e.key === 'End') {
+            this.goTo(this.slides.length - 1);
+          }
+        });
+      }
+
+      setupWheelNav() {
+        let wheelTimeout;
+        document.addEventListener('wheel', (e) => {
+          clearTimeout(wheelTimeout);
+          wheelTimeout = setTimeout(() => {
+            if (Math.abs(e.deltaY) < 20) return;
+            if (e.deltaY > 0) this.goTo(this.currentSlide + 1);
+            else this.goTo(this.currentSlide - 1);
+          }, 80);
+        }, { passive: true });
+      }
+
+      setupTouchNav() {
+        let startY = 0;
+        document.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+          const diff = startY - e.changedTouches[0].clientY;
+          if (Math.abs(diff) > 50) {
+            if (diff > 0) this.goTo(this.currentSlide + 1);
+            else this.goTo(this.currentSlide - 1);
+          }
+        }, { passive: true });
+      }
+
+      setupNavDots() {
+        this.navDotsContainer.innerHTML = '';
+        this.slides.forEach((slide, i) => {
+          const dot = document.createElement('button');
+          dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+          dot.setAttribute('aria-label', slide.dataset.title || `Slide ${i + 1}`);
+          dot.addEventListener('click', () => this.goTo(i));
+          this.navDotsContainer.appendChild(dot);
+        });
+        this.dots = this.navDotsContainer.querySelectorAll('.nav-dot');
+      }
+
+      goTo(index) {
+        if (index < 0 || index >= this.slides.length) return;
+        this.slides[index].scrollIntoView({ behavior: 'smooth' });
+      }
+
+      updateProgress(index) {
+        const pct = ((index + 1) / this.slides.length) * 100;
+        this.progressBar.style.width = pct + '%';
+      }
+
+      updateDots(index) {
+        if (!this.dots) return;
+        this.dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+      }
+    }
+
+    new SlidePresentation();
+  </script>
+</body>
+</html>

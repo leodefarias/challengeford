@@ -5,13 +5,15 @@ import { Colors, FontFamily, FontSize, Spacing, Radius, Shadow, ColorScheme } fr
 import { useTheme } from '../theme/ThemeContext';
 import Navbar from '../components/Navbar';
 import CircularProgress from '../components/CircularProgress';
-import { getRanking, RankingResponse, RankingItem } from '../services/api';
+import { getRanking, postRanking, RankingResponse, RankingItem } from '../services/api';
+import { loadCustomCriterios } from '../utils/scoreSettings';
 
 const PERFIS = [
   { key: 'desempenho', label: 'Desempenho' },
   { key: 'offroad', label: 'Off-Road' },
   { key: 'familia', label: 'Família' },
   { key: 'custo_beneficio', label: 'Custo-Benefício' },
+  { key: 'custom', label: 'Personalizado' },
 ];
 
 // Colors that don't need to change with theme
@@ -125,7 +127,16 @@ export default function ScoreScreen() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getRanking(p);
+      let data: RankingResponse;
+      if (p === 'custom') {
+        const criterios = await loadCustomCriterios();
+        if (!criterios || Object.keys(criterios).length === 0) {
+          throw new Error('Configure os pesos em Config. Score antes de usar o perfil personalizado.');
+        }
+        data = await postRanking(criterios);
+      } else {
+        data = await getRanking(p);
+      }
       setRanking(data);
     } catch (e) {
       setError((e as Error).message);

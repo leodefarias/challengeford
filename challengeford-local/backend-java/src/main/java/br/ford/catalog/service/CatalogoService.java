@@ -4,6 +4,7 @@ import br.ford.catalog.api.dto.response.*;
 import br.ford.catalog.api.exception.PythonServiceException;
 import br.ford.catalog.domain.entity.*;
 import br.ford.catalog.domain.entity.CatalogoEntity.CatalogoStatus;
+import br.ford.catalog.domain.entity.TermoPendenteEntity.TermoStatus;
 import br.ford.catalog.domain.repository.*;
 import br.ford.catalog.security.InputSanitizer;
 import br.ford.catalog.service.dto.PythonAtributoMetaDTO;
@@ -53,6 +54,7 @@ public class CatalogoService {
 
     @Transactional
     public CatalogoResponseDTO solicitarExtracao(String marca, String modelo, String versao, boolean forcarReprocessamento) {
+        marca = inputSanitizer.sanitize(marca.trim().toLowerCase());
         modelo = inputSanitizer.sanitize(modelo.trim().toLowerCase());
         versao = inputSanitizer.sanitize(versao.trim().toLowerCase());
         log.info("AUDIT|extracao_solicitada|marca={}|modelo={}|versao={}|forcar={}",
@@ -106,15 +108,20 @@ public class CatalogoService {
             catalogoRepository.save(salvo);
         }
 
-        // Termos desconhecidos
+        // Termos desconhecidos — evita duplicatas pendentes
         if (resultado.getTermosDesconhecidos() != null) {
-            resultado.getTermosDesconhecidos().forEach(t ->
+            resultado.getTermosDesconhecidos().forEach(t -> {
+                boolean jaExiste = termoPendenteRepository
+                        .existsByTermoIgnoreCaseAndFonteAndStatus(t.getTermo(), t.getFonte(), TermoStatus.pendente);
+                if (!jaExiste) {
                     termoPendenteRepository.save(TermoPendenteEntity.builder()
                             .termo(t.getTermo())
                             .contexto(t.getContexto())
                             .atributoSugerido(t.getAtributoSugerido())
                             .fonte(t.getFonte())
-                            .build()));
+                            .build());
+                }
+            });
         }
 
         log.info("Catálogo persistido: {} {} {} (cobertura={}%)",
@@ -132,27 +139,41 @@ public class CatalogoService {
         List<Map<String, Object>> ranking = (List<Map<String, Object>>) rankingResult.getOrDefault("ranking", List.of());
 
         Map<String, Integer> maxNivelPorAtributo = new HashMap<>();
+        Map<String, String> liderMarcaPorAtributo = new HashMap<>();
+        Map<String, Double> maxScorePorAtributo = new HashMap<>();
+
         for (Map<String, Object> item : ranking) {
+            String veiculoLabel = (String) item.get("veiculo");
+            String marcaLider = extrairMarcaDoLabel(veiculoLabel);
             Map<String, Map<String, Object>> breakdown =
                     (Map<String, Map<String, Object>>) item.getOrDefault("breakdown", Map.of());
             breakdown.forEach((attr, info) -> {
                 int nivel = Math.min(3, (int) Math.round(toDouble(info.get("score_normalizado")) * 3));
                 maxNivelPorAtributo.merge(attr, nivel, Math::max);
+                double scoreNorm = toDouble(info.get("score_normalizado"));
+                if (scoreNorm >= maxScorePorAtributo.getOrDefault(attr, -1.0)) {
+                    maxScorePorAtributo.put(attr, scoreNorm);
+                    liderMarcaPorAtributo.put(attr, marcaLider);
+                }
             });
         }
 
         List<CatalogoEntity> todos = catalogoRepository.findAll();
+        int persistidos = 0;
 
         for (Map<String, Object> item : ranking) {
             String veiculoLabel = (String) item.get("veiculo");
             double pontuacao    = toDouble(item.get("pontuacao_total"));
 
-            // Resolve catalogo pelo label "marca modelo versao" (suporta modelos com espaço)
             Optional<CatalogoEntity> opt = todos.stream()
-                    .filter(c -> (c.getMarca() + " " + c.getModelo() + " " + c.getVersao()).equals(veiculoLabel))
+                    .filter(c -> labelsEquivalentes(c, veiculoLabel))
                     .findFirst();
-            if (opt.isEmpty()) continue;
+            if (opt.isEmpty()) {
+                log.warn("Ranking: catálogo não encontrado para label '{}'", veiculoLabel);
+                continue;
+            }
             CatalogoEntity catalogo = opt.get();
+            persistidos++;
 
             // SCORE_COMPETITIVO — substitui entrada do perfil para este catálogo
             scoreCompetitivoRepository.deleteByCatalogoIdAndPerfil(catalogo.getId(), perfil);
@@ -168,7 +189,7 @@ public class CatalogoService {
             Map<String, Map<String, Object>> breakdown =
                     (Map<String, Map<String, Object>>) item.getOrDefault("breakdown", Map.of());
 
-            capabilityScoreRepository.deleteByCatalogoId(catalogo.getId());
+            capabilityScoreRepository.deleteByCatalogoIdAndPerfil(catalogo.getId(), perfil);
             List<CapabilityScoreEntity> caps = new ArrayList<>();
             breakdown.forEach((attr, info) -> {
                 double scoreNorm = toDouble(info.get("score_normalizado"));
@@ -182,9 +203,8 @@ public class CatalogoService {
                         .nivelMaximoCluster(nivelMax)
                         .scoreBruto(toDouble(info.get("score_normalizado")))
                         .scoreAjustado(toDouble(info.get("score_ponderado")))
-                        .liderMarca(ranking.get(0) != null
-                                ? ((String) ranking.get(0).get("veiculo")).split(" ")[0]
-                                : null)
+                        .liderMarca(liderMarcaPorAtributo.get(attr))
+                        .perfilCompeticao(perfil)
                         .build());
             });
             capabilityScoreRepository.saveAll(caps);
@@ -192,7 +212,7 @@ public class CatalogoService {
             log.debug("Scores salvos para {} | perfil={} | score={}", veiculoLabel, perfil, pontuacao);
         }
 
-        log.info("Ranking '{}' persistido no Oracle ({} catálogos)", perfil, ranking.size());
+        log.info("Ranking '{}' persistido no Oracle ({}/{} catálogos)", perfil, persistidos, ranking.size());
     }
 
     @Transactional(readOnly = true)
@@ -206,7 +226,12 @@ public class CatalogoService {
                 .map(c -> Map.of("marca", c.getMarca(), "modelo", c.getModelo(), "versao", c.getVersao()))
                 .collect(Collectors.toList());
 
-        return mapComparativo(pythonClient.comparar(veiculos));
+        ComparativoResponseDTO comparativo = mapComparativo(pythonClient.comparar(veiculos));
+        if (comparativo.veiculos().size() < veiculos.size()) {
+            log.warn("Comparativo parcial: solicitados {} veículos, retornados {}",
+                    veiculos.size(), comparativo.veiculos().size());
+        }
+        return comparativo;
     }
 
     // --- Mapping helpers ---
@@ -313,5 +338,22 @@ public class CatalogoService {
     private double toDouble(Object value) {
         if (value instanceof Number n) return n.doubleValue();
         return 0.0;
+    }
+
+    private static String buildVehicleLabel(CatalogoEntity c) {
+        return String.join(" ",
+                c.getMarca() != null ? c.getMarca().trim() : "",
+                c.getModelo() != null ? c.getModelo().trim() : "",
+                c.getVersao() != null ? c.getVersao().trim() : "").trim();
+    }
+
+    private static boolean labelsEquivalentes(CatalogoEntity c, String veiculoLabel) {
+        if (veiculoLabel == null) return false;
+        return buildVehicleLabel(c).equalsIgnoreCase(veiculoLabel.trim());
+    }
+
+    private static String extrairMarcaDoLabel(String veiculoLabel) {
+        if (veiculoLabel == null || veiculoLabel.isBlank()) return null;
+        return veiculoLabel.trim().split("\\s+")[0].toLowerCase();
     }
 }

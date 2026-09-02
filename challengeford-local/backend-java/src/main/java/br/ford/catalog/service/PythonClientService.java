@@ -93,10 +93,20 @@ public class PythonClientService {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> ranking(List<Map<String, String>> veiculos, String perfil) {
+        return ranking(veiculos, perfil, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> ranking(List<Map<String, String>> veiculos, String perfil,
+                                       Map<String, Double> criterios) {
         String url = pythonBaseUrl + "/ranking";
-        Map<String, Object> body = perfil != null
-                ? Map.of("veiculos", veiculos, "perfil", perfil)
-                : Map.of("veiculos", veiculos);
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("veiculos", veiculos);
+        if (criterios != null && !criterios.isEmpty()) {
+            body.put("criterios", criterios);
+        } else if (perfil != null) {
+            body.put("perfil", perfil);
+        }
         try {
             ResponseEntity<Map> response = extractionRestTemplate.postForEntity(url, body, Map.class);
             if (response.getBody() == null) {
