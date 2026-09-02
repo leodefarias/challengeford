@@ -4,7 +4,7 @@ import { Colors, FontFamily, FontSize, Spacing, Radius, Shadow, ColorScheme } fr
 import { useTheme } from '../theme/ThemeContext';
 import BackHeader from '../components/BackHeader';
 import StatusBadge from '../components/StatusBadge';
-import { getCatalogos, CatalogoResumo } from '../services/api';
+import { getCatalogos, CatalogoResumo, extrairCatalogo } from '../services/api';
 
 function progressColor(pct: number): string {
   if (pct >= 90) return Colors.accentGreen;
@@ -29,6 +29,8 @@ export default function StatusAgentScreen({ navigation }: any) {
   const [catalogos, setCatalogos] = useState<CatalogoResumo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [updatingAll, setUpdatingAll] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,6 +47,36 @@ export default function StatusAgentScreen({ navigation }: any) {
 
   useEffect(() => { load(); }, []);
 
+  const atualizarUm = async (c: CatalogoResumo) => {
+    setUpdatingId(c.id);
+    setError(null);
+    try {
+      await extrairCatalogo(c.marca, c.modelo, c.versao, true);
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const atualizarTodos = async () => {
+    setUpdatingAll(true);
+    setError(null);
+    try {
+      for (const c of catalogos) {
+        setUpdatingId(c.id);
+        await extrairCatalogo(c.marca, c.modelo, c.versao, true);
+      }
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setUpdatingId(null);
+      setUpdatingAll(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <BackHeader navigation={navigation} title="Status do Agente" />
@@ -52,6 +84,15 @@ export default function StatusAgentScreen({ navigation }: any) {
 
         <View style={styles.section}>
           <Text style={styles.subtitle}>Progresso de extração por catálogo</Text>
+          <TouchableOpacity
+            style={[styles.updateAllBtn, updatingAll && { opacity: 0.5 }]}
+            onPress={atualizarTodos}
+            disabled={updatingAll || catalogos.length === 0}
+          >
+            <Text style={styles.updateAllText}>
+              {updatingAll ? 'Atualizando fontes…' : 'Atualizar todos das fontes'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {loading ? (
@@ -76,6 +117,7 @@ export default function StatusAgentScreen({ navigation }: any) {
               const pct = Math.round(c.coberturaPct ?? 0);
               const statusStr = mapStatus(c.status);
               const brand = `${c.marca.charAt(0).toUpperCase() + c.marca.slice(1)} ${c.modelo} ${c.versao}`;
+              const live = c.coberturaLivePct != null ? Math.round(c.coberturaLivePct) : null;
               return (
                 <View key={c.id} style={[styles.row, i % 2 === 1 && styles.rowAlt]}>
                   <Text style={[styles.brandCell, { flex: 2 }]} numberOfLines={2}>{brand}</Text>
@@ -83,10 +125,21 @@ export default function StatusAgentScreen({ navigation }: any) {
                     <StatusBadge status={statusStr} />
                   </View>
                   <View style={[styles.progressCol, { flex: 1.5 }]}>
-                    <Text style={styles.progressText}>{pct}%</Text>
+                    <Text style={styles.progressText}>
+                      {pct}%{live != null ? ` · vivo ${live}%` : ' · seed'}
+                    </Text>
                     <View style={styles.progressTrack}>
                       <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: progressColor(pct) }]} />
                     </View>
+                    <TouchableOpacity
+                      style={styles.refreshBtn}
+                      onPress={() => atualizarUm(c)}
+                      disabled={updatingAll || updatingId === c.id}
+                    >
+                      <Text style={styles.refreshText}>
+                        {updatingId === c.id ? 'Extraindo…' : 'Atualizar'}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               );
@@ -118,6 +171,18 @@ const makeStyles = (colors: ColorScheme) => StyleSheet.create({
   errorBox: { marginTop: Spacing.md, backgroundColor: '#ea454522', borderRadius: Radius.md, borderWidth: 1, borderColor: '#ea4545', padding: Spacing.base, alignItems: 'center' },
   errorText: { fontFamily: FontFamily.sansSemiBold, fontSize: FontSize.sm, color: '#ea4545', marginBottom: 4 },
   retryText: { fontFamily: FontFamily.mono, fontSize: FontSize.sm, color: colors.accentBlue },
+  updateAllBtn: {
+    marginTop: Spacing.sm,
+    backgroundColor: colors.accentBlue + '22',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: colors.accentBlue,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+  },
+  updateAllText: { fontFamily: FontFamily.sansSemiBold, fontSize: FontSize.sm, color: colors.accentBlue },
+  refreshBtn: { marginTop: 6 },
+  refreshText: { fontFamily: FontFamily.mono, fontSize: FontSize.sm, color: colors.accentBlue },
   emptyBox: { marginTop: Spacing.xl, alignItems: 'center', padding: Spacing.xl },
   emptyText: { fontFamily: FontFamily.sansBold, fontSize: FontSize.base, color: colors.textPrimary },
 });

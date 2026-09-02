@@ -62,10 +62,11 @@ public class SecurityConfig {
                     .requestMatcher(request -> true))
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/auth/login").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers(
-                    "/admin/**", "/api/admin/**", "/.env", "/.env.local", "/.env.prod",
+                    "/admin", "/admin/**",
+                    "/.env", "/.env.local", "/.env.prod",
                     "/api/internal/**", "/phpinfo.php", "/wp-admin", "/wp-login.php",
                     "/actuator/env", "/actuator/beans", "/console", "/h2-console",
                     "/api/v1/admin", "/api/users/dump", "/api/debug"

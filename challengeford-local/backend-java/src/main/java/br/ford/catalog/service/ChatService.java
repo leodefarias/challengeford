@@ -51,16 +51,24 @@ public class ChatService {
 
         String resposta = (String) resultado.getOrDefault("resposta", "");
         Boolean respondido = (Boolean) resultado.getOrDefault("contexto_utilizado", false);
+        List<String> fontes = extrairFontes(resultado.get("fontes"));
 
         ChatCacheEntity entry = ChatCacheEntity.builder()
                 .perguntaHash(hash)
                 .perguntaOriginal(pergunta)
                 .resposta(resposta)
-                .dataExpiracao(LocalDateTime.now().plusDays(30))
+                .fontesCitadas(String.join(",", fontes))
+                .dataExpiracao(LocalDateTime.now().plusHours(24))
                 .build();
         cacheRepository.save(entry);
 
-        return new ChatResponseDTO(resposta, List.of(), respondido, false);
+        return new ChatResponseDTO(resposta, fontes, respondido, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> extrairFontes(Object raw) {
+        if (!(raw instanceof List<?> list)) return List.of();
+        return list.stream().map(String::valueOf).filter(s -> !s.isBlank()).toList();
     }
 
     private String normalizarPergunta(String p) {

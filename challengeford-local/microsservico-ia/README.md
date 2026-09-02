@@ -42,14 +42,15 @@ Microsserviço Python que extrai, normaliza e disponibiliza fichas técnicas com
 
 ### Hierarquia de coleta (site scraper)
 
-Para cada veículo, o scraper tenta as fontes nesta ordem, passando para a próxima em caso de bloqueio ou conteúdo insuficiente:
+Para cada veículo, o scraper tenta **todas** as fontes e o agente mescla os textos:
 
-1. **Mitsubishi**: site oficial via httpx (200 OK direto)
-2. **iCarros** (`icarros.com.br`): fonte universal BR, funciona via httpx para todos os 6 modelos
-3. **Site oficial JS-rendered**:
-   - **Playwright** (gratuito) — headless Chromium com scroll e anti-detecção básica
-   - **Cloudflare Browser Rendering** — fallback pago, aceito somente se retornar >5000 chars com keywords de spec
-   - **Firecrawl** — último recurso para SPAs que bloqueiam headless
+1. **iCarros** (`icarros.com.br`): ficha técnica BR via httpx
+2. **Site oficial JS-rendered** (além do iCarros, não no lugar dele):
+   - **Playwright** (gratuito)
+   - **Cloudflare Browser Rendering**
+   - **Firecrawl**
+
+PDFs oficiais estáveis existem hoje só para Ranger Raptor e Hilux; as demais montadoras usam site + seed da KB.
 
 ### Hierarquia de coleta (PDF)
 
@@ -377,8 +378,8 @@ Ranking determinístico por critérios ponderados com justificativa LLM. Use `pe
 ```
 
 **Atributos suportados como critérios:**
-- Numéricos maiores-melhor: `potencia_cv`, `torque_nm`, `airbags_quantidade`, `tela_central_pol`, `capacidade_reboque_kg`, `profundidade_vadeo_mm`, `angulo_ataque_graus`, `angulo_saida_graus`, `emplacamentos_mes_atual`, `emplacamentos_acum_ano`
-- Numéricos menores-melhor: `preco_tabela_brl`, `consumo_cidade_km_l`, `posicao_ranking_segmento`
+- Numéricos maiores-melhor: `potencia_cv`, `torque_nm`, `airbags_quantidade`, `tela_central_pol`, `capacidade_reboque_kg`, `profundidade_vadeo_mm`, `angulo_ataque_graus`, `angulo_saida_graus`, `emplacamentos_mes_atual`, `emplacamentos_acum_ano`, `consumo_cidade_km_l`, `consumo_estrada_km_l`
+- Numéricos menores-melhor: `preco_tabela_brl`, `posicao_ranking_segmento`
 - Booleanos (1.0 se `true`, 0.0 se `false`): `frenagem_autonoma`, `camera_360`, `controle_cruzeiro_adaptativo`, `monitoramento_ponto_cego`, `carplay`, `android_auto`, `reducao`, `diferencial_bloqueio` e demais campos bool do schema
 
 ---

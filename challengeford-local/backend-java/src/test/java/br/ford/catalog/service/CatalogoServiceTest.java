@@ -2,6 +2,7 @@ package br.ford.catalog.service;
 
 import br.ford.catalog.api.dto.response.CatalogoResponseDTO;
 import br.ford.catalog.api.dto.response.CatalogoResumoDTO;
+import br.ford.catalog.domain.entity.CapabilityScoreEntity;
 import br.ford.catalog.domain.entity.CatalogoEntity;
 import br.ford.catalog.domain.entity.CatalogoEntity.CatalogoStatus;
 import br.ford.catalog.domain.repository.*;
@@ -145,6 +146,49 @@ class CatalogoServiceTest {
         catalogoService.salvarResultadoPython(resultado);
 
         verify(termoPendenteRepository).save(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void salvarRanking_nivelMaximoCluster_maxPorAtributoNoCluster() {
+        CatalogoEntity ford = catalogoFixture(1L, "ford");
+        CatalogoEntity toyota = catalogoFixture(2L, "toyota");
+        toyota.setModelo("hilux");
+        toyota.setVersao("gr-s");
+
+        Map<String, Object> breakdownFord = Map.of(
+                "potencia_cv", Map.of("score_normalizado", 1.0, "score_ponderado", 0.35, "valor", 397));
+        Map<String, Object> breakdownToyota = Map.of(
+                "potencia_cv", Map.of("score_normalizado", 0.4, "score_ponderado", 0.14, "valor", 224));
+
+        Map<String, Object> rankingResult = Map.of(
+                "perfil", "desempenho",
+                "ranking", List.of(
+                        Map.of("veiculo", "ford Ranger Raptor", "pontuacao_total", 0.9, "breakdown", breakdownFord),
+                        Map.of("veiculo", "toyota hilux gr-s", "pontuacao_total", 0.5, "breakdown", breakdownToyota)
+                ));
+
+        when(catalogoRepository.findAll()).thenReturn(List.of(ford, toyota));
+        when(capabilityScoreRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        catalogoService.salvarRanking(rankingResult);
+
+        ArgumentCaptor<List<CapabilityScoreEntity>> captor = ArgumentCaptor.forClass(List.class);
+        verify(capabilityScoreRepository, times(2)).saveAll(captor.capture());
+
+        List<CapabilityScoreEntity> capsToyota = captor.getAllValues().stream()
+                .filter(list -> list.stream().anyMatch(c ->
+                        c.getCatalogo() != null && "toyota".equals(c.getCatalogo().getMarca())))
+                .findFirst()
+                .orElse(List.of());
+
+        CapabilityScoreEntity potenciaToyota = capsToyota.stream()
+                .filter(c -> "potencia_cv".equals(c.getCapability()))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(potenciaToyota.getNivel()).isEqualTo(1);
+        assertThat(potenciaToyota.getNivelMaximoCluster()).isEqualTo(3);
     }
 
     // --- helpers ---

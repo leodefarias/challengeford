@@ -378,25 +378,30 @@ async def _scrape_oficial_js(marca: str, modelo: str, versao: str) -> dict | Non
     return None
 
 
-async def scrape(marca: str, modelo: str, versao: str) -> dict | None:
+async def scrape(marca: str, modelo: str, versao: str) -> list[dict]:
     """
-    Hierarquia de coleta:
-    1. iCarros (httpx, 200 OK para todos os 6 modelos)
+    Coleta todas as fontes de site disponíveis e devolve lista para mescla no agente.
+    1. iCarros (httpx)
     2. Site oficial JS-rendered: Playwright → Cloudflare → Firecrawl
-    Nota: o bypass httpx para Mitsubishi foi removido pois capturava apenas a versão GL MT
-    por padrão (sem JS). iCarros e o fallback JS-rendered são mais precisos para HPE-S.
     """
-    # iCarros como fonte primária universal
+    resultados: list[dict] = []
+
     try:
-        resultado = await _scrape_icarros(marca, modelo, versao)
-        if resultado and len(resultado.get("texto_estruturado", "")) > 200:
-            logger.info("%s: iCarros OK (%d chars)", marca, len(resultado["texto_estruturado"]))
-            return resultado
+        icarros = await _scrape_icarros(marca, modelo, versao)
+        if icarros and len(icarros.get("texto_estruturado", "")) > 200:
+            logger.info("%s: iCarros OK (%d chars)", marca, len(icarros["texto_estruturado"]))
+            resultados.append(icarros)
     except ScraperBloqueadoError as exc:
         logger.warning("iCarros bloqueado para %s: %s", marca, exc)
 
-    # Fallback: site oficial JS-rendered (Playwright → Cloudflare → Firecrawl)
-    return await _scrape_oficial_js(marca, modelo, versao)
+    oficial = await _scrape_oficial_js(marca, modelo, versao)
+    if oficial and len(oficial.get("texto_estruturado", "")) > 200:
+        fonte_oficial = oficial.get("fonte")
+        ja_tem = any(r.get("fonte") == fonte_oficial for r in resultados)
+        if not ja_tem:
+            resultados.append(oficial)
+
+    return resultados
 
 
 if __name__ == "__main__":
@@ -407,17 +412,17 @@ if __name__ == "__main__":
         print("=== Testando scraper: Ford Ranger Raptor (iCarros) ===")
         r = await scrape("ford", "Ranger", "Raptor")
         if r:
-            print(f"Fonte: {r['fonte']}")
-            print(f"Chars: {len(r['texto_estruturado'])}")
-            print(f"Preview:\n{r['texto_estruturado'][:1500]}")
+            print(f"Fontes: {[x.get('fonte') for x in r]}")
+            print(f"Chars: {[len(x.get('texto_estruturado', '')) for x in r]}")
+            print(f"Preview:\n{r[0]['texto_estruturado'][:1500]}")
         else:
             print("Sem resultado")
 
         print("\n=== Testando scraper: Nissan Frontier PRO-4X ===")
         r2 = await scrape("nissan", "Frontier", "PRO-4X")
         if r2:
-            print(f"Fonte: {r2['fonte']}")
-            print(f"Preview:\n{r2['texto_estruturado'][:1000]}")
+            print(f"Fontes: {[x.get('fonte') for x in r2]}")
+            print(f"Preview:\n{r2[0]['texto_estruturado'][:1000]}")
         else:
             print("Sem resultado")
 

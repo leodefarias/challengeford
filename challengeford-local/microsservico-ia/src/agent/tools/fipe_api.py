@@ -30,7 +30,8 @@ CODIGOS_FIPE: dict[str, dict[str, str]] = {
     "toyota_hilux_gr-s":            {"marca": "56", "modelo": "8554",  "ano": "2024-3"},
     "vw_amarok_v6_extreme":         {"marca": "59", "modelo": "9895",  "ano": "2026-3"},
     "chevrolet_s10_high_country":   {"marca": "23", "modelo": "7305",  "ano": "2024-3"},
-    "mitsubishi_nova-triton_hpe-s": {"marca": "41", "modelo": "4478",  "ano": "2017-3"},  # proxy L200 HPE
+    # Nova-Triton: lookup dinâmico na API (não usar proxy L200 2017)
+    "mitsubishi_nova-triton_hpe-s": {"marca": "41", "lookup": "triton"},
     "nissan_frontier_pro-4x":       {"marca": "43", "modelo": "9792",  "ano": "2024-3"},
 }
 
@@ -179,6 +180,53 @@ async def _buscar_por_config(config: dict, base_url: str) -> FipeResultado | Non
     )
 
 
+async def _lookup_config(config: dict, base_url: str) -> dict | None:
+    """Resolve marca/modelo/ano via listagem da API quando `lookup` está definido."""
+    termo = (config.get("lookup") or "").lower()
+    cod_marca = config.get("marca", "")
+    if not termo or not cod_marca:
+        return None
+    data = await _get_json(f"{base_url}/carros/marcas/{cod_marca}/modelos")
+    if not data:
+        return None
+    modelos = data.get("modelos") or data.get("Modelos") or []
+    candidatos = []
+    for m in modelos:
+        nome = str(m.get("nome") or m.get("name") or "").lower()
+        codigo = str(m.get("codigo") or m.get("code") or "")
+        if termo in nome and codigo:
+            score = 0
+            if "hpe" in nome:
+                score += 2
+            if "triton" in nome:
+                score += 2
+            if "l200" in nome and "2017" in nome:
+                score -= 5
+            candidatos.append((score, codigo, nome))
+    if not candidatos:
+        logger.warning("FIPE lookup: nenhum modelo contendo %r na marca %s", termo, cod_marca)
+        return None
+    candidatos.sort(reverse=True)
+    _, cod_modelo, nome = candidatos[0]
+    anos = await _get_json(f"{base_url}/carros/marcas/{cod_marca}/modelos/{cod_modelo}/anos")
+    if not isinstance(anos, list) or not anos:
+        return None
+    # Prefere anos 2024+ diesel/gasolina (código tipo YYYY-N)
+    def _ano_rank(item: dict) -> tuple:
+        codigo = str(item.get("codigo") or "")
+        ano = int(codigo.split("-")[0]) if codigo[:4].isdigit() else 0
+        return (ano, 1 if codigo.endswith("-3") else 0)
+
+    anos_ok = [a for a in anos if _ano_rank(a)[0] >= 2020]
+    escolhido = max(anos_ok or anos, key=_ano_rank)
+    return {
+        "marca": cod_marca,
+        "modelo": cod_modelo,
+        "ano": str(escolhido.get("codigo") or ""),
+        "nome": nome,
+    }
+
+
 async def buscar_preco(marca: str, modelo: str, versao: str, ano: int = 2025) -> FipeResultado | None:
     _init_cache()
 
@@ -187,6 +235,13 @@ async def buscar_preco(marca: str, modelo: str, versao: str, ano: int = 2025) ->
     if not config:
         logger.warning("FIPE: nenhuma config para %s", key)
         return None
+
+    if config.get("lookup"):
+        resolved = await _lookup_config(config, _FIPE_API_PRIMARY) or await _lookup_config(config, _FIPE_API_FALLBACK)
+        if not resolved:
+            logger.warning("FIPE: lookup falhou para %s — não sobrescrever preço seed", key)
+            return None
+        config = {**config, **resolved}
 
     codigo_cache = f"{config.get('marca','')}-{config.get('modelo','')}"
 

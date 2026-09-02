@@ -150,6 +150,21 @@ export async function comparar(ids: number[]): Promise<Comparativo> {
   return res.data;
 }
 
+export async function extrairCatalogo(
+  marca: string,
+  modelo: string,
+  versao: string,
+  forcarReprocessamento = true
+): Promise<CatalogoDetalhe> {
+  const res = await api.post('/api/catalogos/extrair', {
+    marca,
+    modelo,
+    versao,
+    forcarReprocessamento,
+  });
+  return res.data;
+}
+
 export async function getRanking(perfil?: string, ids?: number[]): Promise<RankingResponse> {
   const params: Record<string, any> = {};
   if (perfil) params.perfil = perfil;
