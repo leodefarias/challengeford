@@ -44,7 +44,6 @@ public class DataInitializer implements CommandLineRunner {
         criarUsuarioSeNaoExiste("admin@ford.com.br", adminPassword, "Administrador Ford", UserRole.admin);
         criarUsuarioSeNaoExiste("analista@ford.com.br", adminPassword, "Analista Ford", UserRole.analista);
 
-        normalizarCatalogos();
         seedCatalogosSeVazio();
     }
 
@@ -61,30 +60,7 @@ public class DataInitializer implements CommandLineRunner {
             usuarioRepository.save(usuario);
             log.info("Usuário criado: {} ({})", email, role);
         } else {
-            UsuarioEntity usuario = existing.get();
-            usuario.setSenhaHash(passwordEncoder.encode(senha));
-            usuario.setAtivo(true);
-            usuarioRepository.save(usuario);
-            log.info("Senha sincronizada: {} ({})", email, role);
-        }
-    }
-
-    private void normalizarCatalogos() {
-        try {
-            var todos = catalogoRepository.findAll();
-            for (var c : todos) {
-                boolean reconhecido = SEED_VEHICLES.stream().anyMatch(s ->
-                    s.marca().equalsIgnoreCase(c.getMarca() != null ? c.getMarca().trim() : "") &&
-                    s.modelo().equalsIgnoreCase(c.getModelo() != null ? c.getModelo().trim() : "") &&
-                    s.versao().equalsIgnoreCase(c.getVersao() != null ? c.getVersao().trim() : ""));
-                if (!reconhecido) {
-                    catalogoRepository.deleteById(c.getId());
-                    log.warn("Catálogo desconhecido removido: {}/{}/{} (id={})",
-                            c.getMarca(), c.getModelo(), c.getVersao(), c.getId());
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Falha na limpeza de catálogos: {}", e.getMessage());
+            log.debug("Usuário já existe, senha preservada: {} ({})", email, role);
         }
     }
 

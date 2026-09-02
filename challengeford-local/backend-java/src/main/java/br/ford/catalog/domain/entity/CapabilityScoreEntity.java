@@ -44,6 +44,9 @@ public class CapabilityScoreEntity {
     @Column(name = "LIDER_MARCA", length = 50)
     private String liderMarca;
 
+    @Column(name = "PERFIL_COMPETICAO", length = 50)
+    private String perfilCompeticao;
+
     @Column(name = "DATA_CALCULO", nullable = false)
     private LocalDateTime dataCalculo;
 

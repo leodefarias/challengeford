@@ -16,4 +16,8 @@ public interface CapabilityScoreRepository extends JpaRepository<CapabilityScore
     @Modifying
     @Query("DELETE FROM CapabilityScoreEntity c WHERE c.catalogo.id = :catalogoId")
     void deleteByCatalogoId(Long catalogoId);
+
+    @Modifying
+    @Query("DELETE FROM CapabilityScoreEntity c WHERE c.catalogo.id = :catalogoId AND c.perfilCompeticao = :perfil")
+    void deleteByCatalogoIdAndPerfil(Long catalogoId, String perfil);
 }

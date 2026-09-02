@@ -97,7 +97,7 @@ class CatalogoServiceTest {
     @Test
     void salvarResultadoPython_novosCatalogo_persisteEntidade() {
         ResultadoPythonDTO resultado = buildResultadoPythonDTO("ford", "Ranger", "Raptor", 1.0, 0.78);
-        when(catalogoRepository.findByMarcaAndModeloAndVersao("ford", "Ranger", "Raptor"))
+        when(catalogoRepository.findByMarcaAndModeloAndVersao("ford", "ranger", "raptor"))
                 .thenReturn(Optional.empty());
         when(catalogoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -118,7 +118,7 @@ class CatalogoServiceTest {
         existente.setCoberturaLivePct(78.0); // já salvo de extração anterior
 
         ResultadoPythonDTO resultado = buildResultadoPythonDTO("ford", "Ranger", "Raptor", 1.0, 0.0);
-        when(catalogoRepository.findByMarcaAndModeloAndVersao("ford", "Ranger", "Raptor"))
+        when(catalogoRepository.findByMarcaAndModeloAndVersao("ford", "ranger", "raptor"))
                 .thenReturn(Optional.of(existente));
         when(catalogoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -152,6 +152,8 @@ class CatalogoServiceTest {
     @SuppressWarnings("unchecked")
     void salvarRanking_nivelMaximoCluster_maxPorAtributoNoCluster() {
         CatalogoEntity ford = catalogoFixture(1L, "ford");
+        ford.setModelo("ranger");
+        ford.setVersao("raptor");
         CatalogoEntity toyota = catalogoFixture(2L, "toyota");
         toyota.setModelo("hilux");
         toyota.setVersao("gr-s");
@@ -189,6 +191,68 @@ class CatalogoServiceTest {
 
         assertThat(potenciaToyota.getNivel()).isEqualTo(1);
         assertThat(potenciaToyota.getNivelMaximoCluster()).isEqualTo(3);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void salvarRanking_labelCaseInsensitive_persisteScores() {
+        CatalogoEntity ford = catalogoFixture(1L, "ford");
+        ford.setModelo("ranger");
+        ford.setVersao("raptor");
+
+        Map<String, Object> breakdown = Map.of(
+                "potencia_cv", Map.of("score_normalizado", 1.0, "score_ponderado", 0.35, "valor", 397));
+        Map<String, Object> rankingResult = Map.of(
+                "perfil", "desempenho",
+                "ranking", List.of(
+                        Map.of("veiculo", "FORD Ranger RAPTOR", "pontuacao_total", 0.9, "breakdown", breakdown)
+                ));
+
+        when(catalogoRepository.findAll()).thenReturn(List.of(ford));
+        when(capabilityScoreRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        catalogoService.salvarRanking(rankingResult);
+
+        verify(scoreCompetitivoRepository).save(any());
+        verify(capabilityScoreRepository).deleteByCatalogoIdAndPerfil(1L, "desempenho");
+        verify(capabilityScoreRepository).saveAll(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void salvarRanking_liderMarcaPorAtributo_usaMelhorScore() {
+        CatalogoEntity ford = catalogoFixture(1L, "ford");
+        ford.setModelo("ranger");
+        ford.setVersao("raptor");
+        CatalogoEntity toyota = catalogoFixture(2L, "toyota");
+        toyota.setModelo("hilux");
+        toyota.setVersao("gr-s");
+
+        Map<String, Object> rankingResult = Map.of(
+                "perfil", "desempenho",
+                "ranking", List.of(
+                        Map.of("veiculo", "ford ranger raptor", "pontuacao_total", 0.5,
+                                "breakdown", Map.of("potencia_cv",
+                                        Map.of("score_normalizado", 0.4, "score_ponderado", 0.14))),
+                        Map.of("veiculo", "toyota hilux gr-s", "pontuacao_total", 0.9,
+                                "breakdown", Map.of("potencia_cv",
+                                        Map.of("score_normalizado", 1.0, "score_ponderado", 0.35)))
+                ));
+
+        when(catalogoRepository.findAll()).thenReturn(List.of(ford, toyota));
+        when(capabilityScoreRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        catalogoService.salvarRanking(rankingResult);
+
+        ArgumentCaptor<List<CapabilityScoreEntity>> captor = ArgumentCaptor.forClass(List.class);
+        verify(capabilityScoreRepository, times(2)).saveAll(captor.capture());
+
+        CapabilityScoreEntity capFord = captor.getAllValues().stream()
+                .flatMap(List::stream)
+                .filter(c -> "ford".equals(c.getCatalogo().getMarca()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(capFord.getLiderMarca()).isEqualTo("toyota");
     }
 
     // --- helpers ---

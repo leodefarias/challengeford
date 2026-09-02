@@ -2,6 +2,7 @@ package br.ford.catalog.api.controller;
 
 import br.ford.catalog.api.dto.request.ComparativoRequest;
 import br.ford.catalog.api.dto.request.ExtrairRequest;
+import br.ford.catalog.api.dto.request.RankingRequest;
 import br.ford.catalog.api.dto.response.CatalogoResponseDTO;
 import br.ford.catalog.api.dto.response.CatalogoResumoDTO;
 import br.ford.catalog.api.dto.response.ComparativoResponseDTO;
@@ -73,17 +74,25 @@ public class CatalogoController {
     public ResponseEntity<Map<String, Object>> ranking(
             @RequestParam(required = false) String perfil,
             @RequestParam(required = false) List<Long> ids) {
+        return ResponseEntity.ok(executarRanking(perfil, null, ids));
+    }
 
+    @Operation(summary = "Ranking com critérios customizados",
+            description = "Pontua veículos com pesos personalizados por atributo")
+    @ApiResponse(responseCode = "200", description = "Ranking customizado com breakdown de scores")
+    @PostMapping("/ranking")
+    public ResponseEntity<Map<String, Object>> rankingCustomizado(@RequestBody RankingRequest request) {
+        return ResponseEntity.ok(executarRanking(request.perfil(), request.criterios(), request.ids()));
+    }
+
+    private Map<String, Object> executarRanking(String perfil, Map<String, Double> criterios, List<Long> ids) {
         List<Map<String, String>> veiculos = catalogoService.listarCatalogos().stream()
-                .filter(c -> ids == null || ids.contains(c.id()))
+                .filter(c -> ids == null || ids.isEmpty() || ids.contains(c.id()))
                 .map(c -> Map.of("marca", c.marca(), "modelo", c.modelo(), "versao", c.versao()))
                 .toList();
 
-        Map<String, Object> resultado = pythonClient.ranking(veiculos, perfil);
-
-        // Persiste scores no Oracle em background (não bloqueia a resposta)
+        Map<String, Object> resultado = pythonClient.ranking(veiculos, perfil, criterios);
         catalogoService.salvarRanking(resultado);
-
-        return ResponseEntity.ok(resultado);
+        return resultado;
     }
 }

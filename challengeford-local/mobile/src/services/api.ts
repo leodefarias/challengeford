@@ -4,7 +4,10 @@ import { navigationRef } from '../navigation/navigationRef';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 
-const api = axios.create({ baseURL: BASE_URL });
+const api = axios.create({
+  baseURL: BASE_URL,
+  timeout: 120_000,
+});
 
 api.interceptors.request.use(async (config) => {
   try {
@@ -31,6 +34,8 @@ api.interceptors.response.use(
       403: 'Acesso negado.',
       404: 'Recurso não encontrado.',
       500: 'Erro interno. Tente novamente mais tarde.',
+      502: 'Microsserviço de IA indisponível. Tente novamente.',
+      504: 'Tempo esgotado. A extração pode levar alguns minutos.',
     };
     const msg = safeMessages[status] ?? `Erro de comunicação. (${error?.message ?? 'sem resposta'})`;
     return Promise.reject(new Error(msg));
@@ -154,7 +159,7 @@ export async function extrairCatalogo(
   marca: string,
   modelo: string,
   versao: string,
-  forcarReprocessamento = true
+  forcarReprocessamento = false
 ): Promise<CatalogoDetalhe> {
   const res = await api.post('/api/catalogos/extrair', {
     marca,
@@ -170,6 +175,11 @@ export async function getRanking(perfil?: string, ids?: number[]): Promise<Ranki
   if (perfil) params.perfil = perfil;
   if (ids && ids.length > 0) params.ids = ids.join(',');
   const res = await api.get('/api/catalogos/ranking', { params });
+  return res.data;
+}
+
+export async function postRanking(criterios: Record<string, number>): Promise<RankingResponse> {
+  const res = await api.post('/api/catalogos/ranking', { criterios });
   return res.data;
 }
 

@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 TERMINOLOGY_MAP: dict[str, Any] = {
     # Tração
     "4MOTION": {"tracao": "4x4_tempo_integral"},
-    "4Runner": {"tracao": "4x4"},
     "AWD": {"tracao": "awd"},
     # Controle de descida
     "Crawl Control": {"controle_descida": True},
