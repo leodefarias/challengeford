@@ -48,10 +48,16 @@ public class CatalogoService {
 
     @Transactional
     public CatalogoResponseDTO solicitarExtracao(String marca, String modelo, String versao) {
+        return solicitarExtracao(marca, modelo, versao, false);
+    }
+
+    @Transactional
+    public CatalogoResponseDTO solicitarExtracao(String marca, String modelo, String versao, boolean forcarReprocessamento) {
         modelo = inputSanitizer.sanitize(modelo.trim().toLowerCase());
         versao = inputSanitizer.sanitize(versao.trim().toLowerCase());
-        log.info("AUDIT|extracao_solicitada|marca={}|modelo={}|versao={}", marca, modelo, versao);
-        ResultadoPythonDTO resultado = pythonClient.extrair(marca, modelo, versao);
+        log.info("AUDIT|extracao_solicitada|marca={}|modelo={}|versao={}|forcar={}",
+                marca, modelo, versao, forcarReprocessamento);
+        ResultadoPythonDTO resultado = pythonClient.extrair(marca, modelo, versao, forcarReprocessamento);
         salvarResultadoPython(resultado);
 
         return catalogoRepository.findByMarcaAndModeloAndVersao(marca, modelo, versao)
@@ -125,10 +131,15 @@ public class CatalogoService {
         String perfil = (String) rankingResult.getOrDefault("perfil", "desconhecido");
         List<Map<String, Object>> ranking = (List<Map<String, Object>>) rankingResult.getOrDefault("ranking", List.of());
 
-        // Calcula nivel_maximo_cluster = pontuação do 1º colocado × 3
-        double maxScore = ranking.stream()
-                .mapToDouble(r -> toDouble(r.get("pontuacao_total")))
-                .max().orElse(1.0);
+        Map<String, Integer> maxNivelPorAtributo = new HashMap<>();
+        for (Map<String, Object> item : ranking) {
+            Map<String, Map<String, Object>> breakdown =
+                    (Map<String, Map<String, Object>>) item.getOrDefault("breakdown", Map.of());
+            breakdown.forEach((attr, info) -> {
+                int nivel = Math.min(3, (int) Math.round(toDouble(info.get("score_normalizado")) * 3));
+                maxNivelPorAtributo.merge(attr, nivel, Math::max);
+            });
+        }
 
         List<CatalogoEntity> todos = catalogoRepository.findAll();
 
@@ -161,14 +172,14 @@ public class CatalogoService {
             List<CapabilityScoreEntity> caps = new ArrayList<>();
             breakdown.forEach((attr, info) -> {
                 double scoreNorm = toDouble(info.get("score_normalizado"));
-                int nivel        = (int) Math.round(scoreNorm * 3);    // escala 0-3
-                int nivelMax     = (int) Math.round((maxScore / pontuacao) * nivel);
+                int nivel        = Math.min(3, (int) Math.round(scoreNorm * 3));
+                int nivelMax     = maxNivelPorAtributo.getOrDefault(attr, nivel);
 
                 caps.add(CapabilityScoreEntity.builder()
                         .catalogo(catalogo)
                         .capability(attr)
-                        .nivel(Math.min(nivel, 3))
-                        .nivelMaximoCluster(Math.min(nivelMax, 3))
+                        .nivel(nivel)
+                        .nivelMaximoCluster(nivelMax)
                         .scoreBruto(toDouble(info.get("score_normalizado")))
                         .scoreAjustado(toDouble(info.get("score_ponderado")))
                         .liderMarca(ranking.get(0) != null

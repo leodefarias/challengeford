@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, SafeAreaView, ActivityIndicator, To
 import { Colors, FontFamily, FontSize, Spacing, Radius, Shadow, ColorScheme } from '../theme';
 import { useTheme } from '../theme/ThemeContext';
 import Navbar from '../components/Navbar';
-import { getCatalogos, getCatalogo, CatalogoResumo, CatalogoDetalhe, CapabilityScore } from '../services/api';
+import { getCatalogos, getCatalogo, getRanking, CatalogoResumo, CatalogoDetalhe, CapabilityScore } from '../services/api';
 
 type Relevance = 'Alta relevância' | 'Média relevância' | 'Baixa relevância';
 
@@ -110,7 +110,11 @@ export default function GapsScreen() {
       const ford = list.find(c => c.marca.toLowerCase() === 'ford') ?? list[0];
       if (!ford) { setLoading(false); return; }
       setSelectedId(ford.id);
-      const det = await getCatalogo(ford.id);
+      let det = await getCatalogo(ford.id);
+      if (!(det.capabilities?.length)) {
+        await getRanking('custo_beneficio');
+        det = await getCatalogo(ford.id);
+      }
       const name = `${ford.marca.charAt(0).toUpperCase() + ford.marca.slice(1)} ${ford.modelo} ${ford.versao}`;
       setDetalhe(det);
       setVehicleName(name);

@@ -167,24 +167,24 @@ class AgenteCatalogo:
             log.append(f"PDF: erro ignorado — {exc}")
 
         # ------------------------------------------------------------------
-        # PASSO 3 — COLETA SITE
+        # PASSO 3 — COLETA SITES (iCarros + oficial, todos mesclados)
         # ------------------------------------------------------------------
-        texto_site = ""
-        site_fonte_url = ""
+        fontes_site: list[dict] = []
         try:
-            from agent.tools.site_scraper import scrape, ScraperBloqueadoError
-            resultado_scrape = await scrape(marca, modelo, versao)
-            if resultado_scrape:
-                texto_site = resultado_scrape.get("texto_estruturado", "")
-                site_fonte_url = resultado_scrape.get("fonte", f"https://site.oficial.{marca.lower()}.com.br")
-                fontes_utilizadas.append(site_fonte_url)
-                log.append(f"Site extraído: {len(texto_site)} chars, seções={resultado_scrape.get('secoes', [])}")
+            from agent.tools.site_scraper import scrape
+            fontes_site = await scrape(marca, modelo, versao)
+            if fontes_site:
+                for src in fontes_site:
+                    fontes_utilizadas.append(src.get("fonte", ""))
+                log.append(
+                    f"Sites extraídos: {len(fontes_site)} fonte(s), "
+                    f"chars={[len(s.get('texto_estruturado', '')) for s in fontes_site]}"
+                )
             else:
                 log.append("Site: nenhum conteúdo retornado")
         except Exception as exc:
-            if "ScraperBloqueadoError" in type(exc).__name__ or isinstance(exc, Exception):
-                logger.warning("Scraper bloqueado para %s: %s", marca, exc)
-                log.append(f"Site bloqueado: {exc}")
+            logger.warning("Scraper bloqueado para %s: %s", marca, exc)
+            log.append(f"Site bloqueado: {exc}")
 
         # ------------------------------------------------------------------
         # PASSO 4 — COLETA FIPE
@@ -225,28 +225,29 @@ class AgenteCatalogo:
                 log.append(f"LLM PDF: erro — {exc}")
 
         # ------------------------------------------------------------------
-        # PASSO 5.5 — CRAG REBUILD: contexto focado nos gaps pós-PDF
+        # PASSO 5.5 — CRAG + LLM por cada fonte de site
         # ------------------------------------------------------------------
-        contexto_rag_site = contexto_rag
-        if texto_site:
+        for src in fontes_site:
+            texto_site = src.get("texto_estruturado", "")
+            site_fonte_url = src.get("fonte", "")
+            tipo_site = src.get("tipo_fonte", "site_oficial")
+            if not texto_site:
+                continue
             gaps_apos_pdf = [
                 a for a in ATRIBUTOS_CORE
                 if atributos_brutos.get(a, {}).get("valor") is None
             ]
+            contexto_rag_site = contexto_rag
             if gaps_apos_pdf:
                 contexto_rag_site = self._kb.construir_contexto_crag(
                     marca, modelo, versao, gaps_apos_pdf
                 )
-                log.append(f"CRAG context rebuilt for site: focusing on {len(gaps_apos_pdf)} gaps")
-            else:
-                log.append("Passo 5.5: PDF preencheu todos os atributos core — contexto site omitido")
-
-        if texto_site:
-            log.append("LLM extraindo do site...")
+                log.append(f"CRAG rebuild para {tipo_site}: {len(gaps_apos_pdf)} gaps")
+            log.append(f"LLM extraindo de {tipo_site} ({site_fonte_url})...")
             try:
                 resultado_llm = self._llm.extrair(texto_site, contexto_rag_site, versao)
                 atribs = resultado_llm.get("atributos", {})
-                atributos_brutos = _mesclar_extraido(atributos_brutos, atribs, "site_oficial", site_fonte_url)
+                atributos_brutos = _mesclar_extraido(atributos_brutos, atribs, tipo_site, site_fonte_url)
                 for t in resultado_llm.get("termos_desconhecidos", []):
                     termos_desconhecidos.append(TermoDesconhecido(
                         termo=t.get("termo", ""),
@@ -255,10 +256,10 @@ class AgenteCatalogo:
                         fonte=site_fonte_url,
                         data_detectado=date.today(),
                     ))
-                log.append(f"Site LLM: {len(atribs)} atributos extraídos")
+                log.append(f"{tipo_site} LLM: {len(atribs)} atributos extraídos")
             except Exception as exc:
-                logger.warning("LLM site falhou: %s", exc)
-                log.append(f"LLM site: erro — {exc}")
+                logger.warning("LLM site falhou (%s): %s", tipo_site, exc)
+                log.append(f"LLM {tipo_site}: erro — {exc}")
 
         # ------------------------------------------------------------------
         # PASSO 6 — NORMALIZAÇÃO via terminology map + validação pós-LLM

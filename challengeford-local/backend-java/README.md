@@ -148,6 +148,6 @@ Os scripts DDL estão versionados em `src/main/resources/db/migration/`:
 | V1 | `V1__create_tables.sql` | 8 tabelas principais |
 | V2 | `V2__create_indexes.sql` | 12 índices de performance |
 | V3 | `V3__seed_data.sql` | Usuários padrão |
-| V4 | `V4__create_views.sql` | 3 views Oracle |
+| V5 | `V5__lgpd_soft_delete.sql` | Soft delete / LGPD |
 
 O Flyway aplica as migrações automaticamente no startup. Se o banco já existir (Oracle FIAP), a flag `baseline-on-migrate=true` evita reexecução.

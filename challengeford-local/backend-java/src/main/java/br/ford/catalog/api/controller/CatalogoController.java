@@ -53,7 +53,11 @@ public class CatalogoController {
     @PreAuthorize("hasAnyRole('ANALISTA', 'ADMIN')")
     public ResponseEntity<CatalogoResponseDTO> extrair(@Valid @RequestBody ExtrairRequest request) {
         return ResponseEntity.ok(
-                catalogoService.solicitarExtracao(request.marca().name(), request.modelo(), request.versao()));
+                catalogoService.solicitarExtracao(
+                        request.marca().name(),
+                        request.modelo(),
+                        request.versao(),
+                        request.forcarReprocessamentoEfetivo()));
     }
 
     @Operation(summary = "Comparar catálogos", description = "Tabela comparativa de atributos entre 2 a 6 veículos")

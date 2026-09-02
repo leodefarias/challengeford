@@ -24,6 +24,15 @@ from slowapi.errors import RateLimitExceeded
 from config import VALIDATED_DIR
 from knowledge_base.kb_manager import KBManager
 from schema import CatalogoSchema, ATRIBUTOS_CORE, MarcaEnum
+from scoring import (
+    BOOLEAN_ATTRS,
+    MAIOR_MELHOR,
+    MENOR_MELHOR,
+    PERFIS_PREDEFINIDOS,
+    deve_usar_cache,
+    normalizar_pesos,
+    score_criterio,
+)
 
 # ---------------------------------------------------------------------------
 # Logging estruturado JSON (rastreabilidade por trace_id)
@@ -232,76 +241,76 @@ def _classificar_pergunta(pergunta: str) -> str:
     return "factual"
 
 
-def _contexto_factual(
+def _menciona_catalogo(pergunta: str, info: dict) -> bool:
+    p = pergunta.lower()
+    tokens = [
+        str(info.get("marca", "")).lower(),
+        str(info.get("modelo", "")).lower(),
+        str(info.get("versao", "")).lower(),
+    ]
+    return any(t and t in p for t in tokens)
+
+
+def _schema_resumo(data: dict) -> tuple[str, str]:
+    schema = data["catalogo"]["schema"]
+    nome = f"{schema['marca']} {schema['modelo']} {schema['versao']}"
+    fonte = (data.get("catalogo") or {}).get("fontes_utilizadas") or []
+    fonte_str = ", ".join(str(f) for f in fonte[:3]) if fonte else "seed"
+    attrs = {k: v for k, v in schema.items() if v is not None and k not in ("marca", "modelo", "versao")}
+    bloco = f"\n{nome} (fontes: {fonte_str}):\n" + "\n".join(f"  {k}: {v}" for k, v in attrs.items())
+    return bloco, fonte_str
+
+
+def _catalogos_para_pergunta(
     pergunta: str,
     marcas_filtro: list[str],
     todos_catalogos: list[dict],
-) -> str:
-    partes: list[str] = []
-    for info in todos_catalogos:
-        if marcas_filtro and info["marca"] not in marcas_filtro:
-            continue
-        data = _carregar_catalogo(info["marca"], info["modelo"], info["versao"])
-        if not data:
-            continue
-        schema = data["catalogo"]["schema"]
-        nome = f"{schema['marca']} {schema['modelo']} {schema['versao']}"
-        attrs = {k: v for k, v in schema.items() if v is not None and k not in ("marca", "modelo", "versao")}
-        partes.append(f"\n{nome}:\n" + "\n".join(f"  {k}: {v}" for k, v in attrs.items()))
-    return "\n".join(partes)
+) -> list[dict]:
+    filtrados = [
+        info for info in todos_catalogos
+        if not marcas_filtro or info["marca"] in marcas_filtro
+    ]
+    mencionados = [i for i in filtrados if _menciona_catalogo(pergunta, i)]
+    return mencionados or filtrados
 
 
-def _contexto_comparacao(
+def _contexto_com_rag(
     pergunta: str,
     marcas_filtro: list[str],
     todos_catalogos: list[dict],
     kb,
-) -> str:
+    incluir_capabilities: bool = False,
+) -> tuple[str, list[str]]:
     partes: list[str] = []
-    for info in todos_catalogos:
-        if marcas_filtro and info["marca"] not in marcas_filtro:
-            continue
-        data = _carregar_catalogo(info["marca"], info["modelo"], info["versao"])
-        if not data:
-            continue
-        schema = data["catalogo"]["schema"]
-        nome = f"{schema['marca']} {schema['modelo']} {schema['versao']}"
-        attrs = {k: v for k, v in schema.items() if v is not None and k not in ("marca", "modelo", "versao")}
-        partes.append(f"\n{nome}:\n" + "\n".join(f"  {k}: {v}" for k, v in attrs.items()))
+    fontes: list[str] = []
 
-    specs = kb.buscar_specs_similares(pergunta, n_results=6)
-    specs_relevantes = [s for s in specs if s["distancia"] < 0.4]
+    specs = kb.buscar_specs_similares(pergunta, n_results=8) if kb else []
+    specs_relevantes = [s for s in specs if s.get("distancia", 1) < 0.5]
     if specs_relevantes:
-        partes.append("\nReferências da KB:")
+        partes.append("Referências da base de conhecimento:")
         for s in specs_relevantes:
             partes.append(f"  - {s['documento']}")
+            meta = s.get("meta") or {}
+            label = f"{meta.get('marca', '')} {meta.get('modelo', '')} {meta.get('versao', '')}".strip()
+            if label:
+                fontes.append(label)
 
-    return "\n".join(partes)
-
-
-def _contexto_recomendacao(
-    pergunta: str,
-    marcas_filtro: list[str],
-    todos_catalogos: list[dict],
-    kb,
-) -> str:
-    partes: list[str] = []
-    for info in todos_catalogos:
+    for info in _catalogos_para_pergunta(pergunta, marcas_filtro, todos_catalogos):
         data = _carregar_catalogo(info["marca"], info["modelo"], info["versao"])
         if not data:
             continue
-        schema = data["catalogo"]["schema"]
-        nome = f"{schema['marca']} {schema['modelo']} {schema['versao']}"
-        attrs = {k: v for k, v in schema.items() if v is not None and k not in ("marca", "modelo", "versao")}
-        partes.append(f"\n{nome}:\n" + "\n".join(f"  {k}: {v}" for k, v in attrs.items()))
+        bloco, fonte_str = _schema_resumo(data)
+        partes.append(bloco)
+        fontes.append(fonte_str)
 
-    capabilities = kb.buscar_capabilities(pergunta, n_results=3)
-    if capabilities:
-        partes.append("\nDefinições de capability relevantes:")
-        for c in capabilities:
-            partes.append(f"  - {c['documento']}")
+    if incluir_capabilities and kb:
+        capabilities = kb.buscar_capabilities(pergunta, n_results=3)
+        if capabilities:
+            partes.append("\nDefinições de capability relevantes:")
+            for c in capabilities:
+                partes.append(f"  - {c['documento']}")
 
-    return "\n".join(partes)
+    return "\n".join(partes), list(dict.fromkeys(fontes))
 
 
 # ---------------------------------------------------------------------------
@@ -377,12 +386,10 @@ async def extrair(request: Request, req: ExtrairRequest, background_tasks: Backg
 
     key = _catalogo_key(req.marca, req.modelo, req.versao)
 
-    # Retorna cache se disponível
-    if not req.forcar_reprocessamento:
-        cached = _carregar_catalogo(req.marca, req.modelo, req.versao)
-        if cached:
-            logger.info("Cache hit: %s", key)
-            return {"fonte": "cache", **cached}
+    cached = None if req.forcar_reprocessamento else _carregar_catalogo(req.marca, req.modelo, req.versao)
+    if deve_usar_cache(cached, req.forcar_reprocessamento):
+        logger.info("Cache hit: %s", key)
+        return {"fonte": "cache", **cached}
 
     # Evita processamento duplicado simultâneo
     if key in _processando:
@@ -457,11 +464,8 @@ async def comparar(request: Request, req: ComparacaoRequest):
 
     # Destaca vencedor por atributo (para numéricos)
     destaques: dict[str, str] = {}
-    atributos_maior_melhor = {
-        "potencia_cv", "torque_nm", "capacidade_reboque_kg", "profundidade_vadeo_mm",
-        "tela_central_pol", "airbags_quantidade",
-    }
-    atributos_menor_melhor = {"preco_tabela_brl", "consumo_cidade_km_l"}
+    atributos_maior_melhor = MAIOR_MELHOR
+    atributos_menor_melhor = MENOR_MELHOR
 
     for atributo in atributos_alvo:
         valores = {nome: tabela[nome].get(atributo) for nome in tabela}
@@ -497,14 +501,10 @@ async def chat(request: Request, req: ChatRequest):
     todos_catalogos = _listar_catalogos()
 
     query_type = _classificar_pergunta(pergunta)
-
-    if query_type == "factual":
-        contexto = _contexto_factual(pergunta, marcas_filtro, todos_catalogos)
-    elif query_type == "comparacao":
-        contexto = _contexto_comparacao(pergunta, marcas_filtro, todos_catalogos, kb)
-    else:
-        contexto = _contexto_recomendacao(pergunta, marcas_filtro, todos_catalogos, kb)
-
+    incluir_caps = query_type == "recomendacao"
+    contexto, fontes = _contexto_com_rag(
+        pergunta, marcas_filtro, todos_catalogos, kb, incluir_capabilities=incluir_caps
+    )
     contexto = contexto or "(sem dados processados ainda)"
 
     from openai import OpenAI
@@ -519,6 +519,7 @@ async def chat(request: Request, req: ChatRequest):
                     "Você é um especialista em veículos automotivos do mercado brasileiro, "
                     "focado em pickups/caminhonetes. Responda de forma direta e objetiva, "
                     "usando apenas os dados fornecidos no contexto. "
+                    "Cite marca, modelo e a fonte quando o contexto indicar. "
                     "Se não houver dados suficientes, diga claramente."
                 ),
             },
@@ -531,102 +532,20 @@ async def chat(request: Request, req: ChatRequest):
         max_tokens=1024,
     )
     resposta = response.choices[0].message.content or ""
-    return {"resposta": resposta, "contexto_utilizado": bool(contexto.strip()), "query_type": query_type}
+    return {
+        "resposta": resposta,
+        "contexto_utilizado": bool(contexto.strip()) and contexto != "(sem dados processados ainda)",
+        "query_type": query_type,
+        "fontes": fontes,
+    }
 
 
 # ---------------------------------------------------------------------------
-# Ranking — constantes de scoring
+# Ranking — usa scoring.score_criterio (km/l = maior melhor)
 # ---------------------------------------------------------------------------
 
-_MAIOR_MELHOR: set[str] = {
-    "potencia_cv", "torque_nm", "cambio_marchas",
-    "capacidade_carga_kg", "capacidade_reboque_kg",
-    "profundidade_vadeo_mm", "angulo_ataque_graus", "angulo_saida_graus", "angulo_rampa_graus",
-    "airbags_quantidade", "tela_central_pol", "painel_digital_pol",
-    "emplacamentos_mes_atual", "emplacamentos_acum_ano",
-}
-
-_MENOR_MELHOR: set[str] = {
-    "preco_tabela_brl", "consumo_cidade_km_l", "consumo_estrada_km_l",
-    "posicao_ranking_segmento",
-}
-
-_BOOLEAN_ATTRS: set[str] = {
-    "reducao", "diferencial_bloqueio", "controle_descida",
-    "frenagem_autonoma", "aviso_colisao_frontal", "manutencao_faixa",
-    "monitoramento_ponto_cego", "camera_re", "camera_360",
-    "controle_cruzeiro_adaptativo", "estacionamento_automatico",
-    "carplay", "android_auto", "conexao_sem_fio",
-    "bancos_eletricos", "bancos_aquecidos", "bancos_ventilados", "carregador_wireless",
-}
-
-PERFIS_PREDEFINIDOS: dict[str, dict[str, float]] = {
-    "familia": {
-        "preco_tabela_brl": 0.35,
-        "airbags_quantidade": 0.20,
-        "frenagem_autonoma": 0.10,
-        "tela_central_pol": 0.15,
-        "emplacamentos_mes_atual": 0.10,
-        "capacidade_carga_kg": 0.10,
-    },
-    "desempenho": {
-        "potencia_cv": 0.35,
-        "torque_nm": 0.30,
-        "profundidade_vadeo_mm": 0.15,
-        "capacidade_reboque_kg": 0.20,
-    },
-    "custo_beneficio": {
-        "preco_tabela_brl": 0.40,
-        "potencia_cv": 0.20,
-        "airbags_quantidade": 0.15,
-        "tela_central_pol": 0.10,
-        "emplacamentos_mes_atual": 0.15,
-    },
-    "offroad": {
-        "profundidade_vadeo_mm": 0.30,
-        "angulo_ataque_graus": 0.20,
-        "angulo_saida_graus": 0.20,
-        "capacidade_reboque_kg": 0.15,
-        "potencia_cv": 0.15,
-    },
-}
-
-
-def _normalizar_pesos(criterios: dict[str, float]) -> dict[str, float]:
-    total = sum(criterios.values())
-    if total <= 0:
-        raise ValueError("Pesos devem ser positivos")
-    return {k: v / total for k, v in criterios.items()}
-
-
-def _score_criterio(
-    valores: dict[str, Any],
-    criterio: str,
-) -> dict[str, float]:
-    """Normaliza min-max os valores de um critério entre os veículos."""
-    if criterio in _BOOLEAN_ATTRS:
-        return {n: (1.0 if v is True else 0.0) for n, v in valores.items()}
-
-    nums = {n: v for n, v in valores.items() if isinstance(v, (int, float))}
-    ausentes = {n for n in valores if n not in nums}
-
-    if not nums:
-        return {n: 0.0 for n in valores}
-
-    min_v = min(nums.values())
-    max_v = max(nums.values())
-
-    if max_v == min_v:
-        scores = {n: 0.5 for n in nums}
-    elif criterio in _MENOR_MELHOR:
-        scores = {n: 1.0 - (v - min_v) / (max_v - min_v) for n, v in nums.items()}
-    else:
-        scores = {n: (v - min_v) / (max_v - min_v) for n, v in nums.items()}
-
-    for n in ausentes:
-        scores[n] = 0.0
-
-    return scores
+_normalizar_pesos = normalizar_pesos
+_score_criterio = score_criterio
 
 
 async def _calcular_ranking(
@@ -684,6 +603,11 @@ async def _calcular_ranking(
                 "score_normalizado": round(scores_map[c].get(nome, 0.0), 4),
                 "peso": criterios[c],
                 "score_ponderado": round(criterios[c] * scores_map[c].get(nome, 0.0), 4),
+                **(
+                    {"fonte": "estimativa", "confianca": 0.8}
+                    if c.startswith("emplacamentos_") or c == "posicao_ranking_segmento"
+                    else {}
+                ),
             }
             for c in criterios
         }
@@ -777,6 +701,11 @@ async def ranking(request: Request, req: RankingRequest):
         "criterios_aplicados": {k: round(v, 4) for k, v in criterios.items()},
         "ranking": resultados,
         "justificativa": justificativa,
+        "emplacamentos": {
+            "fonte": "estimativa",
+            "confianca": 0.8,
+            "descricao": "Seed ANFAVEA/Fenabrave (não é API oficial)",
+        } if any(c.startswith("emplacamentos_") or c == "posicao_ranking_segmento" for c in criterios) else None,
     }
 
 

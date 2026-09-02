@@ -251,7 +251,14 @@ class KBManager:
                     self._specs.add(
                         documents=[f"{marca} {modelo} {versao} — {atributo}: {valor}"],
                         ids=[doc_id],
-                        metadatas=[{"marca": marca, "modelo": modelo, "atributo": atributo, "valor": str(valor), "seed": "true"}],
+                        metadatas=[{
+                            "marca": marca,
+                            "modelo": modelo,
+                            "versao": versao,
+                            "atributo": atributo,
+                            "valor": str(valor),
+                            "seed": "true",
+                        }],
                     )
                 logger.info("Seed carregado: %s %s %s", marca, modelo, versao)
             except Exception as exc:

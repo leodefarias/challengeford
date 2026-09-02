@@ -69,7 +69,7 @@ POC de análise competitiva de catálogos de pickups para Ford Brasil — FIAP C
 | Microsserviço IA | FastAPI + Python 3.12 + ChromaDB | 8000 |
 | Banco de dados | Oracle 12c+ (remoto FIAP) | 1521 |
 | Vector store | ChromaDB (embutido no container Python) | — |
-| LLM | Claude (Anthropic) ou GPT-4.1-mini (OpenAI) | — |
+| LLM | GPT-4.1-mini (OpenAI) | — |
 
 ---
 
@@ -118,8 +118,8 @@ cp .env.example .env
 
 ```env
 # ── LLM (obrigatório) ──────────────────────────────────────
-ANTHROPIC_API_KEY=sk-ant-...          # Chave Claude — obrigatória
-LLM_PROVIDER=claude                    # "claude" ou "openai"
+OPENAI_API_KEY=sk-...                 # Chave OpenAI — obrigatória para extração e chat
+LLM_PROVIDER=openai
 
 # ── Banco Oracle FIAP (obrigatório) ───────────────────────
 ORACLE_URL=jdbc:oracle:thin:@oracle.fiap.com.br:1521/ORCL
@@ -137,8 +137,9 @@ ENCRYPTION_KEY=<string-base64-32-bytes>
 INTERNAL_API_KEY=<token-comunicacao-interna-java-python>
 
 # ── Opcionais ──────────────────────────────────────────────
-OPENAI_API_KEY=                        # Fallback de LLM
 FIRECRAWL_API_KEY=                     # Scraping avançado (SPAs)
+CF_ACCOUNT_ID=                         # Cloudflare Browser Rendering
+CF_API_TOKEN=
 ```
 
 > Gerar todos os segredos de uma vez:
@@ -201,7 +202,7 @@ npx expo start
 | Nginx — redirect HTTP | http://localhost | Redireciona para HTTPS (301) |
 | Java API — health | https://localhost/actuator/health | `{"status":"UP"}` |
 | Java API — Swagger UI | http://localhost:8080/swagger-ui.html | Interface OpenAPI (requer login ADMIN) |
-| Python IA — health | http://localhost:8000/health | `{"status":"ok"}` |
+| Python IA | interno ao Docker (`python-ia:8000`) | Sem porta publicada no host |
 
 > O navegador vai exibir aviso de certificado ao acessar `https://localhost` (cert auto-assinado). Clique em "Avançado → Continuar" para prosseguir. Isso é esperado em ambiente local.
 
@@ -209,9 +210,8 @@ npx expo start
 
 | Usuário | Senha | Role |
 |---------|-------|------|
-| `admin@ford.com` | `Ford@2025` | admin |
-| `analista@ford.com` | `Ford@2025` | analista |
-| `viewer@ford.com` | `Ford@2025` | viewer |
+| `admin@ford.com.br` | `Ford@2025` | admin |
+| `analista@ford.com.br` | `Ford@2025` | analista |
 
 ---
 
@@ -261,7 +261,7 @@ challengeford-local/
 │   │   └── security/           # JWT + RBAC
 │   ├── src/main/resources/
 │   │   ├── application.yml
-│   │   └── db/migration/       # Flyway V1-V4
+│   │   └── db/migration/       # Flyway V1-V5
 │   └── Dockerfile
 │
 ├── microsservico-ia/           # FastAPI + Agente IA
@@ -270,7 +270,7 @@ challengeford-local/
 │   │   ├── agent/              # ReAct agent + tools
 │   │   ├── knowledge_base/     # ChromaDB (4 coleções RAG)
 │   │   ├── schema.py           # CatalogoSchema (~50 atributos, Pydantic v2)
-│   │   └── llm_client.py       # Claude / OpenAI
+│   │   └── llm_client.py       # OpenAI (GPT-4.1-mini)
 │   ├── data/
 │   │   ├── seed/               # JSON seed (6 veículos)
 │   │   └── chromadb/           # Persistência vetorial

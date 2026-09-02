@@ -19,15 +19,14 @@ logger = logging.getLogger(__name__)
 
 PDF_CACHE_DAYS = 30
 
-# URLs de PDF confirmadas em maio/2026
-# Ford: CDN bloqueia httpx (403) mas é acessível via Firecrawl — ver download_pdf()
+# URLs de PDF oficiais estáveis (não inventar links). Sem PDF: agente usa sites + seed.
 _PDF_URLS: dict[str, str | None] = {
     "ford_ranger_raptor":        "https://www.ford.com.br/content/dam/Ford/website-assets/latam/br/nameplate/2025/ranger-raptor/pdf/fbr-ranger-raptor-ficha-tecnica.pdf",
     "toyota_hilux_gr-s":         "https://www.toyotacomunica.com.br/wp-content/uploads/2020/10/Ficha-Tecnica-Hilux-2024.pdf",
-    "vw_amarok_v6_extreme":      None,
-    "chevrolet_s10_high_country": None,
-    "mitsubishi_nova-triton_hpe-s": None,
-    "nissan_frontier_pro-4x":    None,
+    "vw_amarok_v6_extreme":      None,  # sem PDF oficial estável — ficha na página vw.com.br
+    "chevrolet_s10_high_country": None,  # sem PDF oficial estável — chevrolet.com.br/picapes/s10
+    "mitsubishi_nova-triton_hpe-s": None,  # sem PDF oficial estável — mitsubishimotors.com.br
+    "nissan_frontier_pro-4x":    None,  # specs em nissan.com.br/.../versoes.html, não PDF único
 }
 
 _HEADERS = {

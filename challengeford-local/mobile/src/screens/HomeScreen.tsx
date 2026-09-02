@@ -15,6 +15,7 @@ import Navbar from '../components/Navbar';
 import CircularProgress from '../components/CircularProgress';
 import MetricCard from '../components/MetricCard';
 import SkeletonCard from '../components/SkeletonCard';
+import SourceBadge from '../components/SourceBadge';
 import DataTable from '../components/DataTable';
 import { DataRow } from '../components/DataTable';
 import {
@@ -151,7 +152,20 @@ export default function HomeScreen({ navigation }: any) {
   const torque = getNumericAttr(atributos, 'torque_nm');
   const preco = getNumericAttr(atributos, 'preco_tabela_brl');
   const cobertura = detalhe?.coberturaPct ?? 0;
+  const coberturaLive = detalhe?.coberturaLivePct;
   const scoreTecnico = detalhe?.scoreTecnico ?? 0;
+  const fontePot = atributos.find(a => a.atributo === 'potencia_cv')?.fontePrimaria;
+  const fonteTorque = atributos.find(a => a.atributo === 'torque_nm')?.fontePrimaria;
+  const fontePreco = atributos.find(a => a.atributo === 'preco_tabela_brl')?.fontePrimaria;
+  const labelFonte = (f?: string | null) => {
+    if (!f) return 'Sem fonte';
+    if (f.includes('seed') || f === 'kb_seed') return 'Seed / KB';
+    if (f.includes('icarros')) return 'iCarros';
+    if (f.includes('fipe') || f.includes('parallelum')) return 'API FIPE';
+    if (f.startsWith('http')) return 'Fonte web';
+    return f.slice(0, 24);
+  };
+  const urlFonte = (f?: string | null) => (f && f.startsWith('http') ? f : undefined);
 
   const motorRows = filterGroup(atributos, MOTOR_KEYS);
   const tracaoRows = filterGroup(atributos, TRACAO_KEYS);
@@ -201,8 +215,16 @@ export default function HomeScreen({ navigation }: any) {
               <View style={[styles.statusDot, { backgroundColor: detalhe?.status === 'completo' ? colors.accentGreen : '#ed9f33' }]} />
               <Text style={styles.agentStatusText}>
                 Cobertura: {cobertura > 0 ? `${cobertura.toFixed(1)}%` : '—'}
+                {coberturaLive != null
+                  ? ` · ao vivo ${coberturaLive.toFixed(0)}%`
+                  : ' · seed (não extraído ao vivo)'}
               </Text>
             </View>
+            {fontePot ? (
+              <View style={{ marginTop: 8 }}>
+                <SourceBadge label={labelFonte(fontePot)} url={urlFonte(fontePot)} />
+              </View>
+            ) : null}
           </View>
           <CircularProgress value={Math.round(cobertura)} size={70} showPercent />
         </View>
@@ -250,8 +272,8 @@ export default function HomeScreen({ navigation }: any) {
                         label="POTÊNCIA"
                         value={potencia !== null ? String(Math.round(potencia)) : '—'}
                         unit="CV"
-                        source="PDF Oficial"
-                        sourceUrl={pdfUrl}
+                        source={labelFonte(fontePot)}
+                        sourceUrl={urlFonte(fontePot) ?? pdfUrl}
                       />
                     </Animated.View>
                     <Animated.View style={[styles.cardFlex, { opacity: cardAnims[1].opacity, transform: [{ translateY: cardAnims[1].translateY }] }]}>
@@ -259,8 +281,8 @@ export default function HomeScreen({ navigation }: any) {
                         label="TORQUE"
                         value={torque !== null ? String(Math.round(torque)) : '—'}
                         unit="Nm"
-                        source="PDF Oficial"
-                        sourceUrl={pdfUrl}
+                        source={labelFonte(fonteTorque)}
+                        sourceUrl={urlFonte(fonteTorque) ?? pdfUrl}
                       />
                     </Animated.View>
                   </View>
@@ -270,8 +292,8 @@ export default function HomeScreen({ navigation }: any) {
                         label="PREÇO TABELA"
                         value={preco !== null ? `R$${(preco / 1000).toFixed(0)}` : '—'}
                         unit="k"
-                        source="API FIPE"
-                        sourceUrl="https://veiculos.fipe.org.br/"
+                        source={labelFonte(fontePreco) || 'API FIPE'}
+                        sourceUrl={urlFonte(fontePreco) ?? 'https://veiculos.fipe.org.br/'}
                       />
                     </Animated.View>
                     <Animated.View style={[styles.cardFlex, { opacity: cardAnims[3].opacity, transform: [{ translateY: cardAnims[3].translateY }] }]}>

@@ -31,13 +31,13 @@ public class PythonClientService {
         this.pythonBaseUrl = pythonBaseUrl;
     }
 
-    public ResultadoPythonDTO extrair(String marca, String modelo, String versao) {
+    public ResultadoPythonDTO extrair(String marca, String modelo, String versao, boolean forcarReprocessamento) {
         String url = pythonBaseUrl + "/extrair";
         Map<String, Object> body = Map.of(
                 "marca", marca,
                 "modelo", modelo,
                 "versao", versao,
-                "forcar_reprocessamento", false
+                "forcar_reprocessamento", forcarReprocessamento
         );
         log.info("Chamando Python POST /extrair: {} {} {}", marca, modelo, versao);
         try {
