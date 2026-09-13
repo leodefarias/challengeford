@@ -698,7 +698,7 @@
 
   <!--
     SPEAKER 05 · 4:00–4:30  NUNCA CORTAR
-    QR: abrir slides com ?app=http://IP:8081  (ver roteiro).
+    QR: ./start.sh --demo gera o túnel; demo-url.js alimenta este QR.
   -->
   <section class="slide" data-title="Pedido">
     <div class="slide-header">
@@ -732,6 +732,7 @@
     </div>
   </section>
 
+  <script src="demo-url.js"></script>
   <script>
     /* === SLIDE PRESENTATION CONTROLLER === */
     class SlidePresentation {
@@ -835,8 +836,7 @@
 
     new SlidePresentation();
 
-    /* Demo QR: autosight-ford-5min.html?app=http://SEU_IP:8081
-       The URL is stored in localStorage after the first open with ?app= */
+    /* Demo QR: prioriza ?app=, depois demo-url.js (./start.sh --demo), depois localStorage. */
     (function bindDemoQr() {
       const params = new URLSearchParams(window.location.search);
       const fromQuery = params.get('app');
@@ -844,10 +844,20 @@
         try { localStorage.setItem('autosightDemoUrl', fromQuery); } catch (e) { /* private mode */ }
       }
       let url = fromQuery;
+      if (!url && typeof AUTOSIGHT_DEMO_URL === 'string' && AUTOSIGHT_DEMO_URL) {
+        url = AUTOSIGHT_DEMO_URL;
+      }
       if (!url) {
         try { url = localStorage.getItem('autosightDemoUrl'); } catch (e) { url = null; }
       }
-      if (!url) url = 'http://localhost:8081';
+
+      document.querySelectorAll('[data-demo-url]').forEach((el) => {
+        el.textContent = url || 'Rode ./start.sh --demo';
+      });
+      if (!url) {
+        document.querySelectorAll('[data-demo-qr]').forEach((img) => { img.style.display = 'none'; });
+        return;
+      }
 
       const src = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=8&data='
         + encodeURIComponent(url);
@@ -856,9 +866,6 @@
         img.src = src;
         img.alt = 'QR para ' + url;
         img.addEventListener('error', () => { img.style.display = 'none'; });
-      });
-      document.querySelectorAll('[data-demo-url]').forEach((el) => {
-        el.textContent = url;
       });
     })();
   </script>

@@ -6,3 +6,5 @@
 *.pem
 *.p12
 *.jks
+demo/demo-config.js
+pitch-entrega/demo-url.js

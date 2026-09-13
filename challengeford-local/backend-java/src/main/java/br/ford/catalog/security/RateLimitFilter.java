@@ -24,7 +24,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final long CLEANUP_AFTER_MS = 2 * WINDOW_MS;
 
     private static final Map<String, Integer> ENDPOINT_LIMITS = Map.of(
-            "/api/auth/login",         5,
+            "/api/auth/login",        60,
             "/api/catalogos/extrair", 10,
             "/api/chat",              20
     );

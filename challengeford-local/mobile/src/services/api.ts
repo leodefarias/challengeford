@@ -2,7 +2,16 @@ import axios from 'axios';
 import { getItem, setItem, deleteItem } from '../utils/storage';
 import { navigationRef } from '../navigation/navigationRef';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
+function resolveBaseUrl(): string {
+  const env = process.env.EXPO_PUBLIC_API_URL;
+  if (env && env !== 'same-origin') return env.replace(/\/$/, '');
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
+  return 'http://localhost:8080';
+}
+
+const BASE_URL = resolveBaseUrl();
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -32,7 +41,7 @@ api.interceptors.response.use(
       400: 'Requisição inválida.',
       401: 'Credenciais inválidas.',
       403: 'Acesso negado.',
-      404: 'Recurso não encontrado.',
+      429: 'Muitas tentativas. Aguarde um minuto e tente de novo.',
       500: 'Erro interno. Tente novamente mais tarde.',
       502: 'Microsserviço de IA indisponível. Tente novamente.',
       504: 'Tempo esgotado. A extração pode levar alguns minutos.',

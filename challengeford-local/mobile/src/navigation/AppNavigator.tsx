@@ -7,6 +7,8 @@ import { Text, View, ActivityIndicator } from 'react-native';
 import { getItem } from '../utils/storage';
 import { FontFamily, FontSize } from '../theme';
 import { useTheme } from '../theme/ThemeContext';
+import { login } from '../services/api';
+import { DEMO_EMAIL, DEMO_PASSWORD, isDemoMode } from '../utils/demo';
 
 import HomeScreen from '../screens/HomeScreen';
 import ComparativoScreen from '../screens/ComparativoScreen';
@@ -44,6 +46,7 @@ function MainTabs() {
   const { colors } = useTheme();
   return (
     <Tab.Navigator
+      initialRouteName={isDemoMode() ? 'Comparativo' : 'Home'}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -95,9 +98,36 @@ export default function AppNavigator() {
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
 
   useEffect(() => {
-    getItem('jwt_token')
-      .then(token => setInitialRoute(token ? 'MainTabs' : 'Login'))
-      .catch(() => setInitialRoute('Login'));
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getItem('jwt_token');
+        if (token) {
+          if (!cancelled) setInitialRoute('MainTabs');
+          return;
+        }
+        if (isDemoMode()) {
+          let lastError: unknown;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              await login(DEMO_EMAIL, DEMO_PASSWORD);
+              if (!cancelled) setInitialRoute('MainTabs');
+              return;
+            } catch (e) {
+              lastError = e;
+              await new Promise(r => setTimeout(r, 800 * (attempt + 1)));
+            }
+          }
+          if (__DEV__) console.warn('[demo] auto-login falhou', lastError);
+          if (!cancelled) setInitialRoute('Login');
+          return;
+        }
+        if (!cancelled) setInitialRoute('Login');
+      } catch {
+        if (!cancelled) setInitialRoute('Login');
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   if (!initialRoute) return (

@@ -14,13 +14,14 @@ import { FontFamily, FontSize, Spacing, Radius, ColorScheme } from '../theme';
 import { useTheme } from '../theme/ThemeContext';
 import { login } from '../services/api';
 import { sanitizeInput, isValidEmail } from '../utils/sanitize';
+import { DEMO_EMAIL, DEMO_PASSWORD, isDemoMode } from '../utils/demo';
 
 export default function LoginScreen({ navigation }: any) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const [email, setEmail] = useState(isDemoMode() ? DEMO_EMAIL : '');
+  const [senha, setSenha] = useState(isDemoMode() ? DEMO_PASSWORD : '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 

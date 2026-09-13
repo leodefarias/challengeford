@@ -64,8 +64,8 @@ POC de análise competitiva de catálogos de pickups para Ford Brasil — FIAP C
 | Serviço | Tecnologia | Porta |
 |---------|-----------|-------|
 | Mobile | React Native 0.81 + Expo 54 + TypeScript | 8081 |
-| Nginx | Reverse proxy TLS 1.2/1.3 + redirect HTTP→HTTPS | 80 / 443 |
-| Backend Java | Spring Boot 3.2.5 + Java 21 + Oracle JDBC | 8080 (interno) |
+| Nginx | Reverse proxy TLS 1.2/1.3 + redirect HTTP→HTTPS + gateway demo :8082 | 80 / 443 / 8082 |
+| Backend Java | Spring Boot 3.2.5 + Java 21 + Oracle JDBC | 8080 |
 | Microsserviço IA | FastAPI + Python 3.12 + ChromaDB | 8000 |
 | Banco de dados | Oracle 12c+ (remoto FIAP) | 1521 |
 | Vector store | ChromaDB (embutido no container Python) | — |
@@ -167,11 +167,28 @@ O script faz automaticamente:
 1. Valida pré-requisitos e variáveis de ambiente
 2. Gera certificado TLS auto-assinado para o nginx (se não existir)
 3. Builda e sobe os containers Docker (`nginx` + `python-ia` + `java-api`)
-4. Aguarda healthchecks (até 120s Python, 60s Java via HTTPS)
+4. Aguarda healthchecks (até 120s Python, 60s Java)
 5. Instala dependências do mobile se necessário
 6. Abre o Expo (`npx expo start`)
 
 Ao terminar o Expo (Ctrl+C), o script para automaticamente todos os containers.
+
+### Demonstração com QR (celular em qualquer rede)
+
+O notebook precisa de internet. Quem escanear **não** precisa da Wi‑Fi da sala — 4G vale.
+
+```bash
+./start.sh --demo
+# Windows: start.bat --demo
+```
+
+1. Exporta o app web e sobe um túnel HTTPS público (Cloudflare Quick Tunnel)
+2. Abre uma página com o QR dessa URL
+3. Quem escanear entra já autenticado no Comparativo (Ranger Raptor vs Hilux GR-S)
+
+A URL do túnel muda a cada execução. Ctrl+C encerra o túnel. Se a rede da sala bloquear Cloudflare, a página do QR mostra o erro — não use IP local (o celular não alcança).
+
+`./zip-seguro.sh --demo` é outra coisa: gera o zip de entrega com `.env`, não sobe o túnel.
 
 ### Método manual (dois terminais)
 
@@ -200,9 +217,11 @@ npx expo start
 | Serviço | URL | Esperado |
 |---------|-----|---------|
 | Nginx — redirect HTTP | http://localhost | Redireciona para HTTPS (301) |
-| Java API — health | https://localhost/actuator/health | `{"status":"UP"}` |
+| Java API — health (Nginx TLS) | https://localhost/actuator/health | `{"status":"UP"}` |
+| Java API — direto | http://localhost:8080/actuator/health | `{"status":"UP"}` |
 | Java API — Swagger UI | http://localhost:8080/swagger-ui.html | Interface OpenAPI (requer login ADMIN) |
-| Python IA | interno ao Docker (`python-ia:8000`) | Sem porta publicada no host |
+| Python IA | http://localhost:8000/health | `{"status":"ok"}` (ou equivalente) |
+| Demo gateway (após `--demo`) | http://localhost:8082 | App web + `/api` no mesmo host |
 
 > O navegador vai exibir aviso de certificado ao acessar `https://localhost` (cert auto-assinado). Clique em "Avançado → Continuar" para prosseguir. Isso é esperado em ambiente local.
 
@@ -288,6 +307,10 @@ challengeford-local/
 │   ├── App.tsx
 │   └── package.json
 │
+├── demo/                       # QR da demonstração (túnel público)
+│   ├── qr.html                 # Página aberta por ./start.sh --demo
+│   ├── qrcode.min.js           # Gerador de QR local (sem API externa)
+│   └── wait-tunnel.mjs         # Lê a URL https://*.trycloudflare.com
 ├── nginx/
 │   ├── conf/nginx.conf         # Reverse proxy TLS 1.2/1.3, redirect HTTP→HTTPS
 │   └── certs/                  # cert.pem + key.pem (gerados pelo start.sh)
@@ -321,13 +344,17 @@ rm nginx/certs/key.pem nginx/certs/cert.pem
 ./start.sh   # gera automaticamente e sobe tudo
 ```
 
-**Porta 80 ou 443 já em uso**
+**Porta 80, 443, 8080, 8000 ou 8082 já em uso**
 ```bash
 # Verificar processo usando a porta
 sudo lsof -i :443
+sudo lsof -i :8082
 # Parar todos os containers
-docker compose down
+docker compose --profile demo down
 ```
+
+**QR da demo não abre / túnel não sobe**
+O notebook precisa de internet de saída para a Cloudflare. Redes corporativas às vezes bloqueiam. Veja `docker logs ford-demo-tunnel`. Não use o IP local no celular — isso exige a mesma Wi‑Fi e quebra a demo.
 
 **ChromaDB com erro ou dados corrompidos**
 ```bash
@@ -341,14 +368,6 @@ O seed repopula automaticamente na reinicialização.
 FlywayException: Migration checksum mismatch
 ```
 Significa que um arquivo SQL de migração foi alterado após ser aplicado. Não edite arquivos `V*.sql` já executados.
-
-**Porta 8080 ou 8000 já em uso**
-```bash
-# Verificar processo usando a porta
-lsof -i :8080
-# Encerrar container anterior
-docker compose down
-```
 
 ---
 
