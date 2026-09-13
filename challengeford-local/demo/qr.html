@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoSight — QR da demo</title>
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --card: #111820;
+      --accent: #00a2ff;
+      --text: #f4f7fb;
+      --muted: #8fa3bc;
+      --danger: #ff6b6b;
+      --font: "Segoe UI", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 90%, rgba(0, 52, 120, 0.45) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 50% at 90% 10%, rgba(0, 162, 255, 0.12) 0%, transparent 50%),
+        var(--bg);
+    }
+    .wrap { text-align: center; max-width: 36rem; }
+    .brand { letter-spacing: 0.45em; font-weight: 800; color: var(--accent); font-size: 0.85rem; margin-bottom: 0.5rem; }
+    h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); margin-bottom: 0.4rem; }
+    .hint { color: var(--muted); margin-bottom: 1.5rem; line-height: 1.45; }
+    .qr-box {
+      background: #fff;
+      border-radius: 1rem;
+      padding: 1.1rem;
+      display: inline-block;
+      min-width: 16rem;
+      min-height: 16rem;
+    }
+    .qr-box svg { width: min(72vw, 20rem); height: auto; display: block; }
+    .url {
+      margin-top: 1.25rem;
+      word-break: break-all;
+      font-size: 0.95rem;
+      color: var(--accent);
+    }
+    .error { color: var(--danger); line-height: 1.5; }
+    .foot { margin-top: 1.5rem; color: var(--muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">FORD · AUTOSIGHT</div>
+    <h1>Escaneie para abrir o app</h1>
+    <p class="hint" id="hint">Pode usar dados móveis. Não precisa da Wi‑Fi deste notebook.</p>
+    <div class="qr-box" id="qr"></div>
+    <p class="url" id="url"></p>
+    <p class="foot" id="foot"></p>
+  </div>
+  <script src="qrcode.min.js"></script>
+  <script src="demo-config.js"></script>
+  <script>
+    (function () {
+      var url = (typeof AUTOSIGHT_DEMO_URL === 'string' && AUTOSIGHT_DEMO_URL) ? AUTOSIGHT_DEMO_URL : '';
+      var err = (typeof AUTOSIGHT_DEMO_ERROR === 'string' && AUTOSIGHT_DEMO_ERROR) ? AUTOSIGHT_DEMO_ERROR : '';
+      var qrEl = document.getElementById('qr');
+      var urlEl = document.getElementById('url');
+      var hint = document.getElementById('hint');
+      var foot = document.getElementById('foot');
+
+      if (!url) {
+        hint.className = 'hint error';
+        hint.textContent = err || 'Túnel ainda não está no ar. Rode ./start.sh --demo e deixe esta página abrir de novo.';
+        qrEl.style.display = 'none';
+        return;
+      }
+
+      try {
+        var qr = qrcode(0, 'M');
+        qr.addData(url);
+        qr.make();
+        qrEl.innerHTML = qr.createSvgTag(4, 0);
+      } catch (e) {
+        qrEl.style.display = 'none';
+        hint.className = 'hint error';
+        hint.textContent = 'Não deu para desenhar o QR. Abra a URL abaixo no celular.';
+      }
+
+      urlEl.textContent = url;
+      foot.textContent = 'A URL muda a cada execução. Ctrl+C no terminal encerra o túnel.';
+    })();
+  </script>
+</body>
+</html>

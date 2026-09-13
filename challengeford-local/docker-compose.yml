@@ -7,9 +7,11 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "8082:8082"
     volumes:
       - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/certs:/etc/nginx/certs:ro
+      - ./mobile/dist:/usr/share/nginx/html:ro
     depends_on:
       java-api:
         condition: service_healthy
@@ -21,8 +23,8 @@ services:
       context: ./microsservico-ia
       dockerfile: Dockerfile
     container_name: ford-python-ia
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
@@ -49,8 +51,8 @@ services:
       context: ./backend-java
       dockerfile: Dockerfile
     container_name: ford-java-api
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
     environment:
       ORACLE_URL: ${ORACLE_URL}
       ORACLE_USER: ${ORACLE_USER}
@@ -73,6 +75,18 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
+
+  # ── Túnel público da demo (só com: docker compose --profile demo up) ──
+  demo-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: ford-demo-tunnel
+    command: tunnel --no-autoupdate --url http://nginx:8082
+    depends_on:
+      nginx:
+        condition: service_started
+    restart: unless-stopped
+    profiles:
+      - demo
 
 volumes:
   chroma_data:

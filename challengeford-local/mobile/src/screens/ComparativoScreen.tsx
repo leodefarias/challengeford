@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { FontFamily, FontSize, Spacing, Radius, Shadow, ColorScheme } from '../t
 import { useTheme } from '../theme/ThemeContext';
 import Navbar from '../components/Navbar';
 import { getCatalogos, comparar, CatalogoResumo, Comparativo } from '../services/api';
+import { isDemoMode } from '../utils/demo';
 
 function formatVal(val: any): string {
   if (val === null || val === undefined) return '—';
@@ -47,6 +48,7 @@ export default function ComparativoScreen() {
   const [loadingList, setLoadingList] = useState(true);
   const [loadingComp, setLoadingComp] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const demoStarted = useRef(false);
 
   const loadCatalogos = useCallback(async () => {
     setLoadingList(true);
@@ -54,6 +56,24 @@ export default function ComparativoScreen() {
     try {
       const list = await getCatalogos();
       setCatalogos(list);
+      if (isDemoMode() && !demoStarted.current) {
+        const raptor = list.find(c => /raptor/i.test(`${c.marca} ${c.modelo} ${c.versao}`));
+        const hilux = list.find(c => /hilux/i.test(`${c.marca} ${c.modelo}`));
+        const ids = [raptor?.id, hilux?.id].filter((id): id is number => typeof id === 'number');
+        const fallback = ids.length >= 2 ? ids : list.slice(0, 2).map(c => c.id);
+        if (fallback.length >= 2) {
+          demoStarted.current = true;
+          setSelected(fallback);
+          setLoadingComp(true);
+          try {
+            setComparativo(await comparar(fallback));
+          } catch (e) {
+            setError((e as Error).message);
+          } finally {
+            setLoadingComp(false);
+          }
+        }
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -61,7 +81,7 @@ export default function ComparativoScreen() {
     }
   }, []);
 
-  useEffect(() => { loadCatalogos(); }, []);
+  useEffect(() => { loadCatalogos(); }, [loadCatalogos]);
 
   const toggleSelect = (id: number) => {
     setSelected(prev =>

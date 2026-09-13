@@ -19,6 +19,7 @@ EXCLUDES=(
   "*.pyc" "*.pyo"
   "node_modules/*"
   "mobile/node_modules/*"
+  "mobile/dist/*"
   "backend-java/target/*"
   "microsservico-ia/data/chromadb/*"
   "microsservico-ia/data/raw/*"

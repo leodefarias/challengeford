@@ -96,7 +96,7 @@ Se o relógio passar de **2:50 no slide 03**, ler as três setas em uma frase ca
 >
 > O que falta para um piloto de um ciclo?
 >
-> O QR abre o AutoSight no celular — mesma rede. Enquanto conversamos, entrem no comparativo.
+> O QR abre o AutoSight no celular — dados móveis valem. Enquanto conversamos, entrem no comparativo.
 >
 > Fico nisso.
 
@@ -116,30 +116,18 @@ Nunca cortar o slide 05.
 
 ---
 
-## QR no dia — app web na sala
+## QR no dia — app no celular, qualquer rede
 
-O deck gera o QR a partir da URL do Expo web. `localhost` no projetor **não abre no celular da Ford**.
+`./start.sh --demo` (Windows: `start.bat --demo`) exporta o app, abre um túnel HTTPS público e mostra o QR. O celular pode estar no **4G**. Não precisa da Wi‑Fi da sala nem do hotspot do notebook.
 
-1. Subir API (`./start.sh` ou Docker) e anotar o IP da máquina na Wi‑Fi da sala (`ip a` / `ipconfig`).
-2. No mobile, apontar a API para esse IP, não para localhost:
+1. Notebook com internet. Subir `./start.sh --demo` e esperar a página do QR.
+2. Ensaio: um celular **fora** da Wi‑Fi da sala (dados móveis). O Comparativo Ranger Raptor vs Hilux GR-S deve abrir sozinho — sem login.
+3. Abrir `autosight-ford-5min.html` em tela cheia. O QR dos slides lê `demo-url.js` gerado pelo start. `?app=` continua como override.
+4. A URL do túnel muda a cada execução. Ctrl+C no terminal encerra o túnel.
 
-```bash
-cd challengeford-local/mobile
-EXPO_PUBLIC_API_URL=http://SEU_IP:8080 npx expo start --web --host lan
-```
+Se o túnel falhar (rede corporativa bloqueando Cloudflare), a página do QR mostra o erro. Não caia para IP local — o celular não alcança.
 
-Se a API estiver atrás do Nginx na 443: `EXPO_PUBLIC_API_URL=https://SEU_IP`.
-
-3. No `.env` / compose, liberar CORS para a origem do Expo, por exemplo `http://SEU_IP:8081`.
-4. Abrir os slides **com a mesma URL que o Expo imprimir**:
-
-`autosight-ford-5min.html?app=http://SEU_IP:8081`
-
-O `?app=` grava a URL; nas próximas aberturas o QR já aponta para ela.
-
-5. Ensaio: um celular na **mesma Wi‑Fi** (não dados móveis). Login `analista@ford.com.br`. Não mandar Timeline nem Eventos de Segurança.
-
-Se o QR não desenhar (rede bloqueia a API do QR), a URL aparece em texto embaixo no slide 05.
+Não mandar Timeline nem Eventos de Segurança.
 
 ---
 
@@ -208,6 +196,5 @@ Não. Três a cinco dias descreve o fluxo de transcrição de catálogo, não um
 - [ ] Ler o roteiro em voz alta com timer (alvo ≤ 4:30)
 - [ ] Conferir corte do slide 03 no relógio 2:50 — a prova (04) e o pedido (05) não podem cair
 - [ ] Combinar quem fala (uma voz no pitch; o resto no feedback)
-- [ ] Ligar Expo web com IP da LAN e abrir os slides com `?app=http://IP:8081`
-- [ ] Testar o QR com um celular na mesma Wi‑Fi antes da sala
+- [ ] Ligar `./start.sh --demo` e confirmar o QR com um celular no 4G
 - [ ] Abrir `autosight-ford-5min.html` em tela cheia (F11); setas ou espaço para avançar

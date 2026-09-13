@@ -4,15 +4,24 @@
 #
 # Services:
 #   :80/443  Nginx TLS reverse proxy  (docker-compose)
-#   :8000    Python IA microservice   (docker-compose, interno)
+#   :8000    Python IA microservice   (docker-compose)
 #   :8080    Java Spring Boot API     (docker-compose)
-#   Expo     Mobile app               (interactive, runs in this terminal)
+#   :8082    Demo gateway (web export + /api, same origin)
+#   Expo     Mobile app               (interactive, unless --demo)
+#
+#   ./start.sh          → backend + Expo local
+#   ./start.sh --demo   → backend + túnel público + QR (celular em qualquer rede)
 #
 # Requirements: Docker, docker-compose (or docker compose), Node.js, npm, openssl
 # ─────────────────────────────────────────────────────────────────────
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
+
+DEMO_MODE=0
+for arg in "$@"; do
+    [ "$arg" = "--demo" ] && DEMO_MODE=1
+done
 
 RED='\033[0;31m'; YELLOW='\033[1;33m'; GREEN='\033[0;32m'; NC='\033[0m'
 info()  { echo -e "${GREEN}[ford]${NC} $*"; }
@@ -26,7 +35,7 @@ cleanup() {
     if [ -n "$COMPOSE" ]; then
         info "Parando backend..."
         cd "$ROOT"
-        $COMPOSE down 2>/dev/null || true
+        $COMPOSE --profile demo down 2>/dev/null || true
     fi
 }
 trap cleanup EXIT INT TERM
@@ -94,6 +103,13 @@ if [ ! -f "$CERT_DIR/cert.pem" ] || [ ! -f "$CERT_DIR/key.pem" ]; then
     fi
 fi
 
+# ── Demo static root (nginx :8082 bind-mount) ─────────────────────────
+mkdir -p "$ROOT/mobile/dist"
+if [ ! -f "$ROOT/mobile/dist/index.html" ]; then
+    printf '%s\n' '<!doctype html><meta charset="utf-8"><title>AutoSight</title><p>Aguardando export da demo…</p>' \
+        > "$ROOT/mobile/dist/index.html"
+fi
+
 # ── Build ─────────────────────────────────────────────────────────────
 info "Buildando imagens Docker..."
 if ! $COMPOSE build 2>&1; then
@@ -104,8 +120,14 @@ if ! $COMPOSE build 2>&1; then
 fi
 
 # ── Start backend (detached) ──────────────────────────────────────────
-info "Subindo containers (nginx + python-ia + java-api)..."
-if ! $COMPOSE up -d 2>&1; then
+if [ "$DEMO_MODE" = 1 ]; then
+    info "Subindo containers (nginx + python-ia + java-api + túnel demo)..."
+    COMPOSE_UP_ARGS=(--profile demo up -d)
+else
+    info "Subindo containers (nginx + python-ia + java-api)..."
+    COMPOSE_UP_ARGS=(up -d)
+fi
+if ! $COMPOSE "${COMPOSE_UP_ARGS[@]}" 2>&1; then
     echo ""
     warn "Falha ao subir containers. Verificando logs..."
     echo "--- java-api ---"
@@ -174,6 +196,60 @@ if [ ! -f ".env" ]; then
         echo "EXPO_PUBLIC_API_URL=http://localhost:8080" > .env
         info "Criado mobile/.env"
     fi
+fi
+
+write_demo_urls() {
+    local url="$1"
+    local err="$2"
+    local js_url
+    js_url=$(printf '%s' "$url" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    local js_err
+    js_err=$(printf '%s' "$err" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    printf 'window.AUTOSIGHT_DEMO_URL = "%s";\nwindow.AUTOSIGHT_DEMO_ERROR = "%s";\n' "$js_url" "$js_err" \
+        > "$ROOT/demo/demo-config.js"
+    printf 'window.AUTOSIGHT_DEMO_URL = "%s";\n' "$js_url" \
+        > "$ROOT/pitch-entrega/demo-url.js"
+}
+
+open_qr_page() {
+    local page="file://${ROOT}/demo/qr.html"
+    if command -v xdg-open >/dev/null 2>&1; then
+        xdg-open "$page" >/dev/null 2>&1 || true
+    elif command -v open >/dev/null 2>&1; then
+        open "$page" >/dev/null 2>&1 || true
+    else
+        warn "Abra manualmente: $page"
+    fi
+}
+
+if [ "$DEMO_MODE" = 1 ]; then
+    info "Exportando app web da demo (EXPO_PUBLIC_DEMO=1)..."
+    if ! EXPO_PUBLIC_DEMO=1 EXPO_PUBLIC_API_URL=same-origin npx expo export --platform web; then
+        error "Falha no expo export. O QR não vai abrir o app."
+    fi
+    chmod -R a+rX "$ROOT/mobile/dist" 2>/dev/null || true
+    # expo export recreates mobile/dist (new inode); reload is not enough — remount.
+    $COMPOSE restart nginx >/dev/null 2>&1 || true
+
+    info "Aguardando URL pública do túnel Cloudflare..."
+    FORD_DOCKER="${DOCKER_SUDO:+$DOCKER_SUDO }docker"
+    TUNNEL_URL=""
+    if TUNNEL_URL=$(FORD_DOCKER="$FORD_DOCKER" node "$ROOT/demo/wait-tunnel.mjs"); then
+        info "Túnel OK → $TUNNEL_URL"
+        write_demo_urls "$TUNNEL_URL" ""
+    else
+        warn "Túnel Cloudflare não subiu (rede corporativa pode bloquear)."
+        warn "  Logs: docker logs ford-demo-tunnel"
+        write_demo_urls "" "Túnel Cloudflare não subiu. O notebook precisa de internet de saída (rede corporativa pode bloquear)."
+    fi
+
+    echo ""
+    info "Abrindo QR da demo..."
+    echo "  Celular pode usar dados móveis — não precisa da Wi‑Fi deste notebook."
+    echo "  Ctrl+C para parar o túnel e os serviços"
+    echo ""
+    open_qr_page
+    while true; do sleep 3600; done
 fi
 
 echo ""
