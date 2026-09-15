@@ -27,13 +27,26 @@ if not exist ".env" (
     copy ".env.example" ".env" >nul
     echo.
     echo [ATENCAO] Edite o arquivo .env antes de continuar!
-    echo   - ANTHROPIC_API_KEY  (obrigatorio para IA)
+    echo   - OPENAI_API_KEY     (obrigatorio para chat e extracao)
     echo   - ORACLE_USER / ORACLE_PASSWORD
-    echo   - ENCRYPTION_KEY     (gere com: openssl rand -base64 32)
-    echo   - JWT_SECRET         (gere com: openssl rand -base64 64)
-    echo   - INTERNAL_API_KEY   (gere com: openssl rand -hex 32)
+    echo   JWT_SECRET, ENCRYPTION_KEY e INTERNAL_API_KEY sao gerados se vazios
     echo.
     pause
+)
+
+:: openssl (Git for Windows) — usado para TLS e segredos vazios
+set OPENSSL=
+openssl version >nul 2>&1
+if not errorlevel 1 (
+    set OPENSSL=openssl
+) else if exist "C:\Program Files\Git\usr\bin\openssl.exe" (
+    set OPENSSL="C:\Program Files\Git\usr\bin\openssl.exe"
+)
+
+if defined OPENSSL (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%scripts\ensure-secrets.ps1" -EnvFile "%ROOT%.env" -OpenSsl %OPENSSL%
+) else (
+    echo [warn] openssl nao encontrado — JWT_SECRET / ENCRYPTION_KEY / INTERNAL_API_KEY nao foram gerados
 )
 
 :: ── Docker check ──────────────────────────────────────────────────────

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -69,6 +70,14 @@ public class PythonClientService {
                 throw new PythonServiceException("Resposta vazia do chat IA");
             }
             return response.getBody();
+        } catch (HttpStatusCodeException e) {
+            int status = e.getStatusCode().value();
+            log.error("Erro ao chamar Python /chat: status={}", status);
+            if (status == 401) {
+                throw new PythonServiceException(
+                        "Token interno inválido na comunicação com o microsserviço IA", e);
+            }
+            throw new PythonServiceException("Microsserviço de chat indisponível: HTTP " + status, e);
         } catch (RestClientException e) {
             log.error("Erro ao chamar Python /chat: {}", e.getMessage());
             throw new PythonServiceException("Microsserviço de chat indisponível: " + e.getMessage(), e);

@@ -30,8 +30,14 @@ error() { echo -e "${RED}[erro]${NC} $*"; exit 1; }
 
 # ── Cleanup trap ───────────────────────────────────────────────────────
 COMPOSE=""
+FALLBACK_PID=""
 cleanup() {
     echo ""
+    if [ -n "$FALLBACK_PID" ]; then
+        kill "$FALLBACK_PID" 2>/dev/null || true
+        wait "$FALLBACK_PID" 2>/dev/null || true
+        FALLBACK_PID=""
+    fi
     if [ -n "$COMPOSE" ]; then
         info "Parando backend..."
         cd "$ROOT"
@@ -46,17 +52,53 @@ if [ ! -f ".env" ]; then
     cp .env.example .env
     echo ""
     echo -e "${RED}ATENÇÃO: Edite o arquivo .env antes de continuar!${NC}"
-    echo "  - ANTHROPIC_API_KEY  (obrigatório para IA)"
+    echo "  - OPENAI_API_KEY     (obrigatório para chat e extração)"
     echo "  - ORACLE_USER / ORACLE_PASSWORD"
-    echo "  - ENCRYPTION_KEY     (gere com: openssl rand -base64 32)"
-    echo "  - JWT_SECRET         (gere com: openssl rand -base64 64)"
-    echo "  - INTERNAL_API_KEY   (gere com: openssl rand -hex 32)"
+    echo "  JWT_SECRET, ENCRYPTION_KEY e INTERNAL_API_KEY são gerados se vazios"
     echo ""
     read -r -p "Pressione ENTER para continuar mesmo assim, ou Ctrl+C para cancelar..."
 fi
 
+upsert_env() {
+    local key="$1" val="$2" tmp
+    tmp="$(mktemp)"
+    awk -v k="$key" -v v="$val" '
+        BEGIN { found=0 }
+        $0 ~ "^" k "=" { print k "=" v; found=1; next }
+        { print }
+        END { if (!found) print k "=" v }
+    ' .env > "$tmp" && mv "$tmp" .env
+}
+
+ensure_secret() {
+    local key="$1" openssl_args="$2"
+    local current="${!key}"
+    if [ -n "$current" ]; then
+        return 0
+    fi
+    if ! command -v openssl &>/dev/null; then
+        warn "$key vazia e openssl ausente — não deu para gerar"
+        return 1
+    fi
+    local val
+    val="$(openssl rand $openssl_args | tr -d '\n\r')"
+    if [ -z "$val" ]; then
+        warn "Falha ao gerar $key"
+        return 1
+    fi
+    upsert_env "$key" "$val"
+    export "$key=$val"
+    info "Gerado $key"
+}
+
 source .env 2>/dev/null || true
 
+ensure_secret JWT_SECRET "-base64 64"
+ensure_secret ENCRYPTION_KEY "-base64 32"
+ensure_secret INTERNAL_API_KEY "-hex 32"
+source .env 2>/dev/null || true
+
+[ -z "${OPENAI_API_KEY}" ]  && warn "OPENAI_API_KEY não definida — chat e extração de IA vão falhar"
 [ -z "${ENCRYPTION_KEY}" ]  && warn "ENCRYPTION_KEY não definida — Java API pode falhar"
 [ -z "${JWT_SECRET}" ]      && warn "JWT_SECRET não definida — Java API pode falhar"
 [ -z "${INTERNAL_API_KEY}" ] && warn "INTERNAL_API_KEY não definida — comunicação Java↔Python pode falhar"
@@ -133,7 +175,7 @@ if ! $COMPOSE "${COMPOSE_UP_ARGS[@]}" 2>&1; then
     echo "--- java-api ---"
     $COMPOSE logs --tail=30 java-api 2>/dev/null || true
     echo "--- python-ia ---"
-    $COMPOSE logs --tail=10 python-ia 2>/dev/null || true
+    $COMPOSE logs --tail=40 python-ia 2>/dev/null || true
     exit 1
 fi
 
@@ -230,17 +272,62 @@ if [ "$DEMO_MODE" = 1 ]; then
     chmod -R a+rX "$ROOT/mobile/dist" 2>/dev/null || true
     # expo export recreates mobile/dist (new inode); reload is not enough — remount.
     $COMPOSE restart nginx >/dev/null 2>&1 || true
+    $COMPOSE up -d --force-recreate demo-tunnel >/dev/null 2>&1 || true
+
+    start_fallback_tunnel() {
+        command -v ssh >/dev/null 2>&1 || return 1
+        local log="/tmp/ford-demo-fallback.log"
+        : > "$log"
+        ssh -p 443 \
+            -o StrictHostKeyChecking=accept-new \
+            -o UserKnownHostsFile=/dev/null \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=3 \
+            -o ExitOnForwardFailure=yes \
+            -o ConnectTimeout=10 \
+            -R 0:127.0.0.1:8082 \
+            a.pinggy.io </dev/null >"$log" 2>&1 &
+        FALLBACK_PID=$!
+        local i url code
+        for i in $(seq 1 20); do
+            if ! kill -0 "$FALLBACK_PID" 2>/dev/null; then
+                FALLBACK_PID=""
+                return 1
+            fi
+            url=$(grep -Eo 'https://[A-Za-z0-9.-]+\.free\.pinggy\.net' "$log" | tail -1)
+            if [ -n "$url" ]; then
+                code=$(curl -sI -m 8 -o /dev/null -w '%{http_code}' "$url/" 2>/dev/null || echo 000)
+                if [ "$code" != "000" ] && [ "$code" != "530" ]; then
+                    FALLBACK_URL="$url"
+                    return 0
+                fi
+            fi
+            sleep 1
+        done
+        kill "$FALLBACK_PID" 2>/dev/null || true
+        wait "$FALLBACK_PID" 2>/dev/null || true
+        FALLBACK_PID=""
+        return 1
+    }
 
     info "Aguardando URL pública do túnel Cloudflare..."
     FORD_DOCKER="${DOCKER_SUDO:+$DOCKER_SUDO }docker"
     TUNNEL_URL=""
-    if TUNNEL_URL=$(FORD_DOCKER="$FORD_DOCKER" node "$ROOT/demo/wait-tunnel.mjs"); then
-        info "Túnel OK → $TUNNEL_URL"
+    FALLBACK_URL=""
+    if TUNNEL_URL=$(FORD_DOCKER="$FORD_DOCKER" FORD_TUNNEL_TIMEOUT=20 node "$ROOT/demo/wait-tunnel.mjs"); then
+        info "Túnel Cloudflare OK → $TUNNEL_URL"
         write_demo_urls "$TUNNEL_URL" ""
     else
-        warn "Túnel Cloudflare não subiu (rede corporativa pode bloquear)."
+        warn "Cloudflare Tunnel bloqueado nesta rede (porta 7844). Tentando túnel via porta 443..."
         warn "  Logs: docker logs ford-demo-tunnel"
-        write_demo_urls "" "Túnel Cloudflare não subiu. O notebook precisa de internet de saída (rede corporativa pode bloquear)."
+        if start_fallback_tunnel; then
+            TUNNEL_URL="$FALLBACK_URL"
+            info "Túnel Pinggy OK → $TUNNEL_URL"
+            warn "Celular pode mostrar aviso Pinggy — toque Continue uma vez (túnel grátis, 60 min)."
+            write_demo_urls "$TUNNEL_URL" ""
+        else
+            write_demo_urls "" "Túnel público não subiu. Esta rede bloqueia Cloudflare (porta 7844) e o fallback 443. Libere saída ou use outra rede."
+        fi
     fi
 
     echo ""

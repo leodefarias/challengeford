@@ -89,7 +89,11 @@
       }
 
       urlEl.textContent = url;
-      foot.textContent = 'A URL muda a cada execução. Ctrl+C no terminal encerra o túnel.';
+      if (/pinggy/i.test(url)) {
+        foot.textContent = 'Se o celular mostrar aviso Pinggy, toque Continue uma vez. Túnel grátis dura 60 min. Ctrl+C no terminal encerra.';
+      } else {
+        foot.textContent = 'A URL muda a cada execução. Ctrl+C no terminal encerra o túnel.';
+      }
     })();
   </script>
 </body>

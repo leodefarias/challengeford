@@ -11,7 +11,9 @@ from typing import Annotated, Any
 
 # Carrega .env antes de qualquer import que leia variáveis de ambiente
 from dotenv import load_dotenv
-load_dotenv(Path(__file__).parent.parent.parent / ".env")
+_MICROSSERVICO_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(_MICROSSERVICO_DIR / ".env")
+load_dotenv(_MICROSSERVICO_DIR.parent / ".env")
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -118,6 +120,8 @@ async def verify_internal_token(request: Request, call_next) -> Response:
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    if isinstance(exc, HTTPException):
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     logger.error("Erro inesperado em %s: %s", request.url.path, exc, exc_info=True)
     return JSONResponse(status_code=500, content={"detail": "Erro interno"})
 
@@ -133,7 +137,9 @@ _idempotency_cache: dict[str, dict] = {}
 def get_kb() -> KBManager:
     global _kb
     if _kb is None:
+        logger.info("Carregando embedding model + ChromaDB...")
         _kb = KBManager()
+        logger.info("Chroma client pronto — seedando coleções...")
         _kb.inicializar()
     return _kb
 
@@ -510,30 +516,36 @@ async def chat(request: Request, req: ChatRequest):
     )
     contexto = contexto or "(sem dados processados ainda)"
 
-    from openai import OpenAI
+    from openai import OpenAI, OpenAIError
     from config import OPENAI_API_KEY, OPENAI_MODEL
-    client = OpenAI(api_key=OPENAI_API_KEY)
-    response = client.chat.completions.create(
-        model=OPENAI_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "Você é um especialista em veículos automotivos do mercado brasileiro, "
-                    "focado em pickups/caminhonetes. Responda de forma direta e objetiva, "
-                    "usando apenas os dados fornecidos no contexto. "
-                    "Cite marca, modelo e a fonte quando o contexto indicar. "
-                    "Se não houver dados suficientes, diga claramente."
-                ),
-            },
-            {
-                "role": "user",
-                "content": f"CONTEXTO:\n{contexto}\n\nPERGUNTA: {pergunta}",
-            },
-        ],
-        temperature=0.3,
-        max_tokens=1024,
-    )
+    if not OPENAI_API_KEY:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY não configurada")
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Você é um especialista em veículos automotivos do mercado brasileiro, "
+                        "focado em pickups/caminhonetes. Responda de forma direta e objetiva, "
+                        "usando apenas os dados fornecidos no contexto. "
+                        "Cite marca, modelo e a fonte quando o contexto indicar. "
+                        "Se não houver dados suficientes, diga claramente."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": f"CONTEXTO:\n{contexto}\n\nPERGUNTA: {pergunta}",
+                },
+            ],
+            temperature=0.3,
+            max_tokens=1024,
+        )
+    except OpenAIError:
+        logger.error("Falha OpenAI em /chat", exc_info=True)
+        raise HTTPException(status_code=503, detail="Serviço de IA temporariamente indisponível")
     resposta = response.choices[0].message.content or ""
     return {
         "resposta": resposta,
