@@ -32,6 +32,8 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY:-}
       CHROMA_PERSIST_DIR: /app/data/chromadb
+      ANONYMIZED_TELEMETRY: "False"
+      HF_HUB_DISABLE_TELEMETRY: "1"
     volumes:
       - chroma_data:/app/data/chromadb
       - ./microsservico-ia/data/validated:/app/data/validated
@@ -39,10 +41,10 @@ services:
       - ./microsservico-ia/data/pdfs:/app/data/pdfs:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
-      retries: 5
-      start_period: 60s
+      retries: 8
+      start_period: 180s
     restart: unless-stopped
 
   # ── API Java Spring Boot (conecta no Oracle FIAP remoto) ──────────
@@ -80,7 +82,9 @@ services:
   demo-tunnel:
     image: cloudflare/cloudflared:latest
     container_name: ford-demo-tunnel
-    command: tunnel --no-autoupdate --url http://nginx:8082
+    # http2 = TCP 7844 (QUIC/UDP 7844 often blocked). If 7844 TCP also
+    # blocked, start.sh falls back to a 443 SSH tunnel (Pinggy).
+    command: tunnel --no-autoupdate --protocol http2 --url http://nginx:8082
     depends_on:
       nginx:
         condition: service_started

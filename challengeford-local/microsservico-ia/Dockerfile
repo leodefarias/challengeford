@@ -16,9 +16,18 @@ RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
 # Playwright chromium — deps já instalados via apt-get acima
 RUN python -m playwright install chromium 2>/dev/null || true
 
+# Evita hang de telemetria Chroma/HF e download do modelo no boot (healthcheck)
+ENV HF_HOME=/app/.cache/huggingface \
+    SENTENCE_TRANSFORMERS_HOME=/app/.cache/sentence_transformers \
+    ANONYMIZED_TELEMETRY=False \
+    HF_HUB_DISABLE_TELEMETRY=1 \
+    TRANSFORMERS_NO_ADVISORY_WARNINGS=1
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
 COPY src/ ./src/
 COPY data/seed/ ./data/seed/
 COPY scripts/ ./scripts/
 
-# Pré-seed da KB ao iniciar (idempotente)
-ENTRYPOINT ["sh", "-c", "cd /app && PYTHONPATH=src python scripts/01_seed_kb.py && PYTHONPATH=src uvicorn api.main:app --host 0.0.0.0 --port 8000"]
+# Seed da KB é idempotente e roda no startup do FastAPI (get_kb).
+# Não rodar 01_seed_kb.py aqui: carrega o embedding 2x e estoura o healthcheck.
+ENTRYPOINT ["sh", "-c", "cd /app && PYTHONPATH=src exec uvicorn api.main:app --host 0.0.0.0 --port 8000"]
