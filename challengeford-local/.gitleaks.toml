@@ -1,0 +1,10 @@
+# Academic delivery may include a local .env for FIAP evaluators (not a public repo leak).
+title = "AutoSight gitleaks"
+
+[allowlist]
+description = "Env templates and intentional evaluation .env"
+paths = [
+  '''\.env$''',
+  '''\.env\.example$''',
+  '''mobile[/\\]\.env\.example$''',
+]

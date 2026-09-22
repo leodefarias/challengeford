@@ -8,3 +8,8 @@
 *.jks
 demo/demo-config.js
 pitch-entrega/demo-url.js
+.tools/
+mobile/dist/
+*.apk
+*.aab
+backend-java/target/

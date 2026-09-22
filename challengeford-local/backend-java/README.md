@@ -92,13 +92,22 @@ http://localhost:8080/v3/api-docs
 | `ORACLE_URL` | Não (tem default) | JDBC URL do Oracle (default: FIAP) |
 | `ORACLE_USER` | **Sim** | Usuário Oracle (ex: RM555211) |
 | `ORACLE_PASSWORD` | **Sim** | Senha Oracle |
-| `JWT_SECRET` | **Sim** | Chave HMAC-SHA256 ≥ 256 bits (use `openssl rand -base64 64`) |
+| `RSA_PRIVATE_KEY` | Recomendado | PKCS#8 RSA Base64 — assina JWT **RS256** (`JwtUtil`) |
+| `RSA_PUBLIC_KEY` | Recomendado | X.509 RSA Base64 — valida JWT. Se ambos vazios → par efêmero |
+| `ENCRYPTION_KEY` | **Sim** | AES-256 em repouso (`openssl rand -base64 32`) |
 | `PYTHON_SERVICE_URL` | Não | URL do microsserviço IA (default: http://localhost:8000) |
 | `INTERNAL_API_KEY` | Não | Token interno Java→Python (X-Internal-Token) |
 | `CORS_ALLOWED_ORIGINS` | Não | Origens permitidas separadas por vírgula (default: http://localhost:8081) |
 | `FORD_ADMIN_PASSWORD` | Não | Senha do usuário admin seed (criado no startup se não existir) |
 
-Copie `.env.example` para `.env` e preencha os valores obrigatórios.
+Copie `.env.example` para `.env` e preencha os valores obrigatórios. Erros HTTP padronizados: `{ error, message, status, timestamp }` via `GlobalExceptionHandler`.
+
+**Testes automatizados (Sprint 3):**
+```bash
+cd backend-java
+mvn -B test
+# Relatórios: target/surefire-reports/  |  cobertura: target/site/jacoco/
+```
 
 ---
 
@@ -109,7 +118,7 @@ Copie `.env.example` para `.env` e preencha os valores obrigatórios.
 ```bash
 # Na raiz do projeto
 cp .env.example .env
-# Editar .env com as credenciais Oracle e JWT_SECRET
+# Editar .env com Oracle + ENCRYPTION_KEY (+ RSA_* opcional)
 docker compose up --build
 ```
 
@@ -119,7 +128,7 @@ docker compose up --build
 cd backend-java
 export ORACLE_USER=RM555211
 export ORACLE_PASSWORD=sua_senha
-export JWT_SECRET=$(openssl rand -base64 64)
+export ENCRYPTION_KEY=$(openssl rand -base64 32)
 mvn spring-boot:run
 ```
 
