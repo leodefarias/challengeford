@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AutoSight — Galeria de Telas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&family=Syne:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #141c2e;
+      --accent: #ed9f33;
+      --text: #e8eef8;
+      --muted: #8b97ad;
+      --line: #243049;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1a2744, var(--bg));
+      color: var(--text);
+      padding: 2rem 1.25rem 4rem;
+    }
+    h1 {
+      font-family: Syne, sans-serif;
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+    .sub { color: var(--muted); max-width: 40rem; margin-bottom: 2rem; }
+    .brand { color: var(--accent); font-family: Syne, sans-serif; font-weight: 700; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.25rem;
+    }
+    .phone {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 1.25rem;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    .phone-notch {
+      height: 1.5rem;
+      background: #0a0f18;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .phone-notch span {
+      width: 4rem; height: 0.35rem; border-radius: 99px; background: #2a354d;
+    }
+    .screen {
+      min-height: 320px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .screen h2 {
+      font-family: Syne, sans-serif;
+      font-size: 1rem;
+      margin: 0;
+    }
+    .screen p { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.35; }
+    .bar {
+      height: 0.45rem;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), #3d7ea6);
+      opacity: 0.9;
+    }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .chip {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.45rem;
+      border-radius: 0.35rem;
+      background: #1e2a42;
+      color: var(--muted);
+      border: 1px solid var(--line);
+    }
+    .fake-list { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.25rem; }
+    .fake-row {
+      height: 2.1rem;
+      border-radius: 0.5rem;
+      background: #1a2438;
+      border: 1px solid var(--line);
+    }
+    .tabs {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.2rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.55rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .cta {
+      margin-top: 0.5rem;
+      background: var(--accent);
+      color: #1a1205;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-align: center;
+      padding: 0.55rem;
+      border-radius: 0.5rem;
+    }
+    footer { margin-top: 2.5rem; color: var(--muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <p class="brand">AUTOSIGHT</p>
+  <h1>Galeria de telas</h1>
+  <p class="sub">Demo visual Sprint 3 — 12 telas do app Ford Challenge. Substitua pelos PNGs capturados no emulador quando disponíveis (ver GALLERY.md).</p>
+  <div class="grid" id="grid"></div>
+  <footer>AutoSight · Expo 54 · br.ford.autosight · Identidade: Syne + DM Sans · accent #ed9f33</footer>
+  <script>
+    const screens = [
+      { t: "Login", d: "E-mail/senha → JWT Bearer. Demo mode opcional.", tabs: false, cta: "Entrar" },
+      { t: "Home", d: "Lista de catálogos e ficha do veículo selecionado.", tabs: true },
+      { t: "Comparativo", d: "Tabela lado a lado (2–6 pickups).", tabs: true },
+      { t: "Score", d: "Ranking por perfil família / desempenho / custo / offroad.", tabs: true },
+      { t: "Gaps", d: "Lacunas competitivas vs Ford Ranger Raptor.", tabs: true },
+      { t: "Chat RAG", d: "Perguntas em linguagem natural sobre specs.", tabs: true },
+      { t: "Timeline", d: "Linha do tempo de atualizações de mercado.", tabs: false },
+      { t: "Itens pendentes", d: "Termos para revisão admin.", tabs: false },
+      { t: "Status do Agente", d: "Health + re-disparo de extração.", tabs: false },
+      { t: "Eventos de Segurança", d: "Audit UI — logins, 401, rate limit.", tabs: false },
+      { t: "Config Score", d: "Pesos customizados do ranking.", tabs: false },
+      { t: "Menu", d: "Navegação, tema claro/escuro, logout.", tabs: false }
+    ];
+    const grid = document.getElementById("grid");
+    screens.forEach((s, i) => {
+      const el = document.createElement("article");
+      el.className = "phone";
+      el.innerHTML = `
+        <div class="phone-notch"><span></span></div>
+        <div class="screen">
+          <div class="chip-row"><span class="chip">${String(i + 1).padStart(2, "0")}</span></div>
+          <h2>${s.t}</h2>
+          <p>${s.d}</p>
+          <div class="bar"></div>
+          <div class="fake-list"><div class="fake-row"></div><div class="fake-row"></div><div class="fake-row"></div></div>
+          ${s.cta ? `<div class="cta">${s.cta}</div>` : ""}
+          ${s.tabs ? `<div class="tabs"><span>Home</span><span>Comp</span><span>Score</span><span>Gaps</span><span>Chat</span></div>` : ""}
+        </div>`;
+      grid.appendChild(el);
+    });
+  </script>
+</body>
+</html>

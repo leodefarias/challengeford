@@ -127,8 +127,10 @@ ORACLE_USER=RM555211
 ORACLE_PASSWORD=SUA_SENHA_FIAP
 
 # ── Segredos de segurança (obrigatório) ────────────────────
-# Gere com: openssl rand -base64 64
-JWT_SECRET=<string-base64-minimo-256-bits>
+# JWT RS256 — par RSA (PKCS#8 + X.509) em Base64 (sem PEM headers)
+# Gerar: ver scripts/gen-rsa-jwt.ps1 ou bloco openssl abaixo
+RSA_PRIVATE_KEY=<base64-pkcs8>
+RSA_PUBLIC_KEY=<base64-x509>
 
 # Gere com: openssl rand -base64 32
 ENCRYPTION_KEY=<string-base64-32-bytes>
@@ -142,11 +144,13 @@ CF_ACCOUNT_ID=                         # Cloudflare Browser Rendering
 CF_API_TOKEN=
 ```
 
-> Gerar todos os segredos de uma vez:
+> Gerar segredos:
 > ```bash
-> echo "JWT_SECRET=$(openssl rand -base64 64)"
+> # AES + token interno
 > echo "ENCRYPTION_KEY=$(openssl rand -base64 32)"
 > echo "INTERNAL_API_KEY=$(openssl rand -hex 32)"
+> # Par RSA para JWT RS256 (PowerShell): .\scripts\gen-rsa-jwt.ps1
+> # Se RSA_* vazios, a API gera par efêmero (tokens invalidam no restart).
 > ```
 
 ---
@@ -368,6 +372,20 @@ O seed repopula automaticamente na reinicialização.
 FlywayException: Migration checksum mismatch
 ```
 Significa que um arquivo SQL de migração foi alterado após ser aplicado. Não edite arquivos `V*.sql` já executados.
+
+---
+
+## Entregas Sprint 3 (repos)
+
+| Disciplina | Artefato |
+|------------|----------|
+| QA / Azure DevOps | [pitch-entrega/09_azure_devops_backlog.md](pitch-entrega/09_azure_devops_backlog.md) · [setup](pitch-entrega/azure-devops/README_SETUP.md) |
+| Cybersecurity | [pitch-entrega/10_cybersecurity_sprint3.md](pitch-entrega/10_cybersecurity_sprint3.md) · [`.github/workflows/devsecops.yml`](.github/workflows/devsecops.yml) |
+| Web Services — testes | [pitch-entrega/11_evidencia_testes_api.md](pitch-entrega/11_evidencia_testes_api.md) · `cd backend-java && mvn test` |
+| Mobile APK | [mobile/BUILD_APK.md](mobile/BUILD_APK.md) · [mobile/README.md](mobile/README.md) · [galeria](mobile/screenshots/gallery.html) |
+
+> **Azure Boards (cloud):** criar org + convidar professor — ver checklist em `pitch-entrega/azure-devops/README_SETUP.md`.  
+> **APK:** exige `npx eas-cli login` na conta Expo do grupo.
 
 ---
 

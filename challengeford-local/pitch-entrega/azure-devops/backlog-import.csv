@@ -1,0 +1,46 @@
+Work Item Type,Title,Description,Acceptance Criteria,Priority,Story Points,Parent Epic,Iteration Path,Tags
+Epic,E1 Autenticação e Controle de Acesso,Garantir acesso seguro por perfil Ford (JWT RS256 + RBAC),,1,,,"Sprint 1",security;auth
+Epic,E2 Catálogo Competitivo,Extrair persistir e consultar fichas de pickups,,1,,,"Sprint 2",catalog
+Epic,E3 Análise e Ranking,Comparar veículos e ranquear por perfil,,1,,,"Sprint 2",analytics
+Epic,E4 Assistente RAG,Perguntas em linguagem natural sobre catálogos,,2,,,"Sprint 2",ai;rag
+Epic,E5 Experiência Mobile,App Expo com fluxos do desafio Ford,,1,,,"Sprint 2",mobile
+Epic,E6 Qualidade Segurança e Operação,Testes DevSecOps observabilidade compliance,,1,,,"Sprint 3",qa;security
+Feature,F1.1 Login JWT,Login e emissão de Bearer token,,1,5,E1 Autenticação e Controle de Acesso,"Sprint 1",auth
+Feature,F1.2 RBAC por perfil,Restrição de endpoints por admin analista viewer,,1,5,E1 Autenticação e Controle de Acesso,"Sprint 1",rbac
+Feature,F1.3 LGPD anonimização,DELETE /api/auth/me anonimiza dados pessoais,,2,3,E1 Autenticação e Controle de Acesso,"Sprint 3",lgpd
+Feature,F2.1 Extração via agente,Disparo de extração via microsserviço IA,,1,13,E2 Catálogo Competitivo,"Sprint 2",extract
+Feature,F2.2 Consulta de catálogos,Listar e buscar fichas autenticadas,,1,3,E2 Catálogo Competitivo,"Sprint 2",api
+Feature,F3.1 Comparativo e Ranking,Comparar e ranquear catálogos,,1,8,E3 Análise e Ranking,"Sprint 2",ranking
+Feature,F4.1 Chat RAG,Endpoint de chat autenticado,,1,8,E4 Assistente RAG,"Sprint 2",chat
+Feature,F5.1 App Mobile e APK,Telas + build EAS APK,,1,13,E5 Experiência Mobile,"Sprint 3",apk
+Feature,F6.1 Testes e DevSecOps,MockMvc pipeline SAST SCA secrets compliance,,1,13,E6 Qualidade Segurança e Operação,"Sprint 3",tests
+Product Backlog Item,PBI-101 Login JWT,"Como analista Ford quero autenticar com e-mail/senha para obter JWT","Given usuário ativo When POST /api/auth/login válido Then 200 e token RS256",1,5,F1.1 Login JWT,"Sprint 1",Must
+Product Backlog Item,PBI-102 RBAC endpoints,"Como administrador quero restringir endpoints por role","Given JWT viewer When POST /extrair Then 403",1,5,F1.2 RBAC por perfil,"Sprint 1",Must
+Product Backlog Item,PBI-103 Anonimizar conta LGPD,"Como titular quero anonimizar minha conta","Given JWT When DELETE /api/auth/me Then 200 e email anonimizado",2,3,F1.3 LGPD anonimização,"Sprint 3",Should
+Product Backlog Item,PBI-201 Extrair catálogo,"Como analista quero extrair fichas de pickups","Given JWT analista When POST /extrair Then 200 e persistência Oracle",1,13,F2.1 Extração via agente,"Sprint 2",Must
+Product Backlog Item,PBI-202 Consultar catálogos,"Como viewer quero listar e abrir fichas","Given sem token When GET /api/catalogos Then 401",1,3,F2.2 Consulta de catálogos,"Sprint 2",Must
+Product Backlog Item,PBI-301 Comparar catálogos,"Como analista quero comparar 2 a 6 veículos","Given JWT When POST /comparar com 2 ids Then 200",1,5,F3.1 Comparativo e Ranking,"Sprint 2",Must
+Product Backlog Item,PBI-302 Ranking por perfil,"Como analista quero ranking familia desempenho custo offroad","Given JWT When GET /ranking Then 200 ordenado",1,8,F3.1 Comparativo e Ranking,"Sprint 2",Must
+Product Backlog Item,PBI-303 Gaps competitivos,"Como analista quero visualizar gaps na UI mobile","Given catálogos When abrir Gaps Then métricas renderizam",2,5,F3.1 Comparativo e Ranking,"Sprint 2",Should
+Product Backlog Item,PBI-401 Chat RAG,"Como analista quero perguntar sobre catálogos","Given JWT When POST /api/chat Then 200 resposta",1,8,F4.1 Chat RAG,"Sprint 2",Must
+Product Backlog Item,PBI-402 Cache chat,"Como sistema quero cachear respostas recorrentes","Given pergunta repetida Then cache hit < 1s",2,3,F4.1 Chat RAG,"Sprint 3",Could
+Product Backlog Item,PBI-501 Login e tabs mobile,"Como usuário quero login e navegação principal","Given app When login Then tabs Home Comparativo Score Gaps Chat",1,8,F5.1 App Mobile e APK,"Sprint 2",Must
+Product Backlog Item,PBI-502 Fluxos mobile,"Como usuário quero comparativo score gaps chat funcionais","Given API up When percorrer fluxos Then sem crash",1,13,F5.1 App Mobile e APK,"Sprint 2",Must
+Product Backlog Item,PBI-503 Build APK EAS,"Como avaliador quero APK instalável Android","Given eas.json When eas build preview Then APK instala",1,5,F5.1 App Mobile e APK,"Sprint 3",Must
+Product Backlog Item,PBI-504 Identidade visual,"Como usuário quero UI consistente","Given theme tokens When todas as telas Then tipografia e cores alinhadas",2,5,F5.1 App Mobile e APK,"Sprint 3",Should
+Product Backlog Item,PBI-505 Screenshots demo,"Como avaliador quero ver todas as telas","Given galeria screenshots Then cada tela documentada",2,3,F5.1 App Mobile e APK,"Sprint 3",Should
+Product Backlog Item,PBI-601 Testes unitários Java,"Como QA quero cobertura service/security","Given mvn test Then Auth Catalogo Chat passam",1,8,F6.1 Testes e DevSecOps,"Sprint 3",Must
+Product Backlog Item,PBI-602 Testes MockMvc,"Como QA quero 200 401 403 automatizados","Given MockMvc When endpoints Then status coerentes",1,8,F6.1 Testes e DevSecOps,"Sprint 3",Must
+Product Backlog Item,PBI-603 Pipeline DevSecOps,"Como security quero SAST SCA secrets container scan","Given push When workflow Then jobs verdes ou findings triados",1,8,F6.1 Testes e DevSecOps,"Sprint 3",Must
+Product Backlog Item,PBI-604 Observabilidade IR,"Como ops quero logs métricas e plano de incidente","Given doc Cyber When incidente Then fluxo detectar-conter-recuperar",2,5,F6.1 Testes e DevSecOps,"Sprint 3",Should
+Product Backlog Item,PBI-605 Compliance STRIDE OWASP LGPD,"Como compliance quero checklist final","Given doc consolidado Then STRIDE ASVS API Mobile LGPD mapeados",1,5,F6.1 Testes e DevSecOps,"Sprint 3",Must
+Product Backlog Item,PBI-606 OpenAPI README,"Como integrador quero Swagger e runbook","Given README When docker compose Then API sobe e /v3/api-docs",1,3,F6.1 Testes e DevSecOps,"Sprint 3",Must
+Task,T-301 MockMvc Auth 200/401,Testes login e 401 sem token,,1,3,PBI-602 Testes MockMvc,"Sprint 3",api
+Task,T-302 MockMvc Catalogo 403,Viewer bloqueado em /extrair,,1,3,PBI-602 Testes MockMvc,"Sprint 3",api
+Task,T-303 Unit JwtUtil Encryption,Ampliar testes security,,2,5,PBI-601 Testes unitários Java,"Sprint 3",java
+Task,T-304 GitHub Actions DevSecOps,Workflow SAST SCA gitleaks trivy,,1,5,PBI-603 Pipeline DevSecOps,"Sprint 3",ci
+Task,T-305 Doc Cyber Sprint 3,Documento único por subetapa,,1,5,PBI-605 Compliance STRIDE OWASP LGPD,"Sprint 3",docs
+Task,T-306 EAS APK preview,eas.json app.json package build,,1,5,PBI-503 Build APK EAS,"Sprint 3",mobile
+Task,T-307 Galeria screenshots,Documentar todas as telas,,2,2,PBI-505 Screenshots demo,"Sprint 3",mobile
+Task,T-308 README JWT RS256,Alinhar docs com JwtUtil,,2,2,PBI-606 OpenAPI README,"Sprint 3",docs
+Task,T-309 Convidar professor Azure,Basic org + Project Admin,,1,3,PBI-605 Compliance STRIDE OWASP LGPD,"Sprint 3",azure
