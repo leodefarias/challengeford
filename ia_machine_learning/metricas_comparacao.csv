@@ -1,0 +1,5 @@
+modelo,cv_accuracy,test_accuracy,test_f1_macro,best_params
+LogisticRegression,0.9847222222222222,0.9833333333333333,0.983508517578833,"{'model__C': 10.0, 'model__l1_ratio': 0.5, 'model__penalty': 'elasticnet', 'model__solver': 'saga'}"
+RandomForest,0.9736111111111111,0.9833333333333333,0.9835164835164836,"{'model__max_depth': None, 'model__max_features': 3, 'model__n_estimators': 500}"
+MLP_PyTorch,,0.9833333333333333,0.983508517578833,"{'hidden': 32, 'lr': 0.01, 'epochs': 80}"
+SVC,0.9819444444444445,0.9722222222222222,0.9724013461434076,"{'model__C': 1.0, 'model__gamma': 'scale', 'model__kernel': 'rbf'}"
