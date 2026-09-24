@@ -7,8 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build:apk": "eas build -p android --profile preview",
-    "build:apk:local": "eas build -p android --profile preview --local"
+    "build:apk": "eas build -p android --profile preview --non-interactive",
+    "build:apk:local": "eas build -p android --profile preview --local --non-interactive"
   },
   "dependencies": {
     "@expo-google-fonts/dm-mono": "^0.4.2",

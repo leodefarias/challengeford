@@ -1,23 +1,21 @@
-# Ação manual restante — Azure DevOps + APK
+# Ação restante — Azure DevOps + APK
 
-## Azure DevOps (obrigatório para nota QA)
+## Azure DevOps (QA) — PRONTO
 
-O backlog completo está em Markdown/CSV no repo. O professor exige o **link cloud**:
+- ORG: https://dev.azure.com/RM555211
+- PROJETO: AutoSight
+- BOARDS: https://dev.azure.com/RM555211/AutoSight/_backlogs
+- Work items: **45** (evidência em `evidencias/azure/`)
 
-1. Seguir [azure-devops/README_SETUP.md](azure-devops/README_SETUP.md)
-2. Importar [azure-devops/backlog-import.csv](azure-devops/backlog-import.csv)
-3. Convidar **Prof. Yan Coelho** (Basic org + Project Administrators)
-4. Colar o URL em Teams e neste arquivo:
+### Professor (1 clique residual)
 
-```
-ORG: https://dev.azure.com/________________
-PROJETO: AutoSight
-BOARDS: https://dev.azure.com/________________/AutoSight/_backlogs
-```
+Convite API erro **5101** (org bloqueia fora do diretório). Habilitar invitations externas e adicionar `profyan.coelho@fiap.com.br` como **Basic** + **Project Administrators**.
 
-## APK EAS (obrigatório para nota Mobile)
+## APK EAS (Mobile) — PRONTO
 
-1. `cd mobile && npx eas-cli login && npx eas-cli init`
-2. `npm run build:apk`
-3. Baixar APK do dashboard Expo → anexar no Teams
-4. (Opcional) copiar para `mobile/dist/autosight-preview.apk`
+- Projeto: https://expo.dev/accounts/leodefarias/projects/autosight-ford
+- Build: https://expo.dev/accounts/leodefarias/projects/autosight-ford/builds/39c4685a-6cc6-4e26-8655-264be19ebee7
+- **Download APK:** https://expo.dev/artifacts/eas/LJM-_EgZB5dqEb28Tt8bMzkMjhBt4qrunf4hwOqTzfc.apk
+- Arquivo local: `mobile/dist/autosight-preview.apk` (gitignored)
+
+Anexar o APK (ou o link) no Teams da disciplina Mobile.

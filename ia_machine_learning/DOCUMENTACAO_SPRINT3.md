@@ -75,11 +75,12 @@ Exploração: **KMeans + silhouette** (melhor k=2, silhouette≈0,30) — o alvo
 
 **Uso no AutoSight:** após extrair/normalizar specs no microsserviço IA, o classificador sugere `perfil` para pré-preencher o ranking (`PERFIS_PREDEFINIDOS`) e encaminhar o chat Adaptive RAG ao fluxo de recomendação. Complementa regras/LLM; não substitui RAG.
 
-**Deploy:**
+**Deploy (implementado):**
 1. Treino offline neste notebook.
-2. Artefato: `modelo_final_perfil.joblib` (pipeline sklearn + scaler).
-3. Carregar no FastAPI (`microsservico-ia`), endpoint sugerido `POST /perfil/sugerir`.
-4. Inferência síncrona em CPU; sem retreino em produção.
+2. Artefato: `modelo_final_perfil.joblib` (pipeline sklearn + scaler) em `microsservico-ia/models/`.
+3. FastAPI `POST /perfil/sugerir` + ranking com `perfil=auto` + specs.
+4. Proxy Java: `POST /api/catalogos/perfil/sugerir` (JWT).
+5. Inferência síncrona em CPU; sem retreino em produção.
 
 **Melhorias futuras:** labels reais de analistas Ford; mais features (ADAS, emplacamentos); monitoramento de drift; calibração de probabilidade para UI de confiança.
 

@@ -1,0 +1,7 @@
+# Surefire 2026-09-24
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.19 s -- in br.ford.catalog.api.ApiAuthorizationMockMvcTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.792 s -- in br.ford.catalog.security.JwtUtilTest
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.289 s -- in br.ford.catalog.service.AuthServiceTest
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.875 s -- in br.ford.catalog.service.CatalogoServiceTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.661 s -- in br.ford.catalog.service.ChatServiceTest
+TOTAL: 30 tests, 0 failures

@@ -1,0 +1,7 @@
+appId: br.ford.autosight
+---
+- launchApp
+- takeScreenshot: 01-login
+- tapOn: "Entrar"
+- takeScreenshot: 02-home
+- takeScreenshot: 03-tabs

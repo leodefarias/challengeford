@@ -2,7 +2,7 @@
 
 **Projeto:** AutoSight — Inteligência Competitiva Automotiva (Ford Brasil)  
 **Entrega:** classificação multiclasse de perfil de pickup  
-**Notebook:** `sprint3_autosight_ml.ipynb` (executar no Google Colab)  
+**Notebook:** [`sprint3_autosight_ml.ipynb`](sprint3_autosight_ml.ipynb)  
 **Equipe:** Leonardo de Farias (RM555211), Gustavo Laur (RM556603), Giancarlo Cestarolli (RM555248)
 
 ---
@@ -75,21 +75,24 @@ Exploração: **KMeans + silhouette** (melhor k=2, silhouette≈0,30) — o alvo
 
 **Uso no AutoSight:** após extrair/normalizar specs no microsserviço IA, o classificador sugere `perfil` para pré-preencher o ranking (`PERFIS_PREDEFINIDOS`) e encaminhar o chat Adaptive RAG ao fluxo de recomendação. Complementa regras/LLM; não substitui RAG.
 
-**Deploy:**
+**Deploy (implementado):**
 1. Treino offline neste notebook.
-2. Artefato: `modelo_final_perfil.joblib` (pipeline sklearn + scaler).
-3. Carregar no FastAPI (`microsservico-ia`), endpoint sugerido `POST /perfil/sugerir`.
-4. Inferência síncrona em CPU; sem retreino em produção.
+2. Artefato: `modelo_final_perfil.joblib` (pipeline sklearn + scaler) em `microsservico-ia/models/`.
+3. FastAPI `POST /perfil/sugerir` + ranking com `perfil=auto` + specs.
+4. Proxy Java: `POST /api/catalogos/perfil/sugerir` (JWT).
+5. Inferência síncrona em CPU; sem retreino em produção.
 
 **Melhorias futuras:** labels reais de analistas Ford; mais features (ADAS, emplacamentos); monitoramento de drift; calibração de probabilidade para UI de confiança.
 
 ---
 
-## Entregáveis (pasta `entrega/`)
+## Entregáveis
 
 | Arquivo | Conteúdo |
 |---|---|
-| `sprint3_autosight_ml.ipynb` | Notebook completo (Colab) |
-| `DOCUMENTACAO_SPRINT3.md` | Esta documentação resumida |
-
-> Ao executar o notebook no Colab, ele regenera os dados sintéticos, treina os modelos e salva `dados_sinteticos_pickups.csv`, `metricas_comparacao.csv`, `resultado_final.txt` e `modelo_final_perfil.joblib` no runtime.
+| `sprint3_autosight_ml.ipynb` | Código e narrativa completa |
+| `DOCUMENTACAO_SPRINT3.md` | Este resumo |
+| `dados_sinteticos_pickups.csv` | Base após limpeza |
+| `metricas_comparacao.csv` | Tabela de métricas |
+| `resultado_final.txt` | Modelo escolhido |
+| `modelo_final_perfil.joblib` | Artefato de deploy |

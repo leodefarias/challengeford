@@ -1,0 +1,8 @@
+**/.env
+**/.env.local
+**/*.apk
+**/*.aab
+**/node_modules/
+**/target/
+**/.tools/
+.pdfshots/

@@ -333,7 +333,7 @@ Ranking é determinístico: normalização min-max por critério + ponderação.
 |---|---|---|---|
 | Usuário → nginx | HTTPS (TLS 1.2/1.3) | Nenhuma (terminação TLS) | HTTP/1.1 |
 | nginx → Java API | HTTP (interno Docker) | Bearer JWT passado adiante | JSON |
-| Mobile → Java API (efetivo) | HTTPS via nginx | Bearer JWT (8h TTL, HS256) | JSON |
+| Mobile → Java API (efetivo) | HTTPS via nginx | Bearer JWT (8h TTL, RS256) | JSON |
 | Java API → Python | HTTP REST (Docker network) | X-Internal-Token (HMAC compare) | JSON |
 | Java API → Oracle | JDBC (ojdbc11 23.4.0) | Usuário/senha Oracle | SQL |
 | Python → OpenAI | HTTPS | API Key (Authorization header) | JSON |
@@ -465,7 +465,7 @@ Ranking é determinístico: normalização min-max por critério + ponderação.
 │  Camada 1: HTTPS/TLS 1.2+1.3   — nginx (transporte)        │
 │  Camada 2: Security Headers    — X-Frame-Options: DENY,     │
 │                                  CSP, HSTS (1 ano), XCTO    │
-│  Camada 3: JWT Bearer HS256    — TTL 8h, stateless          │
+│  Camada 3: JWT Bearer RS256    — TTL 8h, iss/aud, stateless │
 │  Camada 4: RBAC Filter         — admin/analista/viewer       │
 │  Camada 5: Rate Limit (Java)   — login:5/min, extrair:10/min│
 │                                  chat:20/min por IP         │
@@ -484,10 +484,9 @@ Ranking é determinístico: normalização min-max por critério + ponderação.
 └─────────────────────────────────────────────────────────────┘
 
 Nota: A tabela EVENTOS_SEGURANCA mencionada em protótipos anteriores
-não foi implementada no DDL Oracle. A tela "Eventos de Segurança"
-no app exibe os logs estruturados JSON gerados pelo logback
-(SecurityConfig + RateLimitFilter + JwtFilter) consumidos via
-endpoint de audit do Java.
+foi substituída por **logs estruturados** (`logback-spring.xml` JSON +
+`AUDIT|...` / `[SECURITY_ALERT]`) e pela tela mobile de demonstração
+(mock). Não há DDL Flyway `EVENTOS_SEGURANCA` nesta entrega.
 ```
 
 ---
@@ -520,7 +519,8 @@ endpoint de audit do Java.
 │  │  │  Healthcheck: GET /actuator/health (30s/10s/5ret)    │ │   │
 │  │  │  Env: ORACLE_URL, ORACLE_USER, ORACLE_PASSWORD,      │ │   │
 │  │  │       PYTHON_SERVICE_URL=http://python-ia:8000,       │ │   │
-│  │  │       JWT_SECRET, ENCRYPTION_KEY, INTERNAL_API_KEY,  │ │   │
+│  │  │       RSA_PRIVATE/PUBLIC_KEY, ENCRYPTION_KEY,        │ │   │
+│  │  │       INTERNAL_API_KEY, ORACLE_*, OPENAI_API_KEY     │ │   │
 │  │  │       RSA_PRIVATE_KEY, RSA_PUBLIC_KEY,                │ │   │
 │  │  │       CORS_ALLOWED_ORIGINS, FORD_ADMIN_PASSWORD       │ │   │
 │  │  │  depends_on: python-ia (healthy)                      │ │   │
@@ -602,7 +602,7 @@ docker compose up
 | API Gateway | nginx | 1.27-alpine | TLS 1.2/1.3, HTTP→HTTPS |
 | Java Runtime | Eclipse Temurin JRE Alpine | 21 (LTS) | ~512MB RAM estimado |
 | Web Framework (Java) | Spring Boot | 3.2.5 | Spring Security + JPA + Actuator |
-| JWT | jjwt | 0.12.5 | HS256, TTL 8h |
+| JWT | jjwt | 0.12.5 | RS256, TTL 8h |
 | ORM / Migrações | Spring Data JPA + Flyway | boot 3.2.5 | V1–V5, Oracle dialect |
 | JDBC Driver | ojdbc11 | 23.4.0.24.05 | Compatível Oracle 12c+ |
 | Documentação API | springdoc-openapi | 2.5.0 | Swagger UI (role=admin) |
@@ -699,7 +699,8 @@ ORACLE_USER=...
 ORACLE_PASSWORD=...
 
 # JWT + Criptografia
-JWT_SECRET=...                  # ≥ 256 bits (HS256)
+RSA_PRIVATE_KEY=...             # PEM PKCS8 (RS256)
+RSA_PUBLIC_KEY=...              # PEM X.509 (RS256)
 RSA_PRIVATE_KEY=...             # reservado (RS256 futuro)
 RSA_PUBLIC_KEY=...              # reservado (RS256 futuro)
 ENCRYPTION_KEY=...              # 32 bytes AES-256
@@ -731,7 +732,7 @@ Os itens a seguir foram considerados no escopo inicial mas **não foram implemen
 | Funcionalidade | Status | Observação |
 |---|---|---|
 | YouTube/Whisper transcrição | Planejado | Não existe código na tool list atual |
-| JWT RS256 (assimétrico) | Planejado | RSA_PRIVATE/PUBLIC_KEY declarados, HS256 em uso |
+| JWT RS256 (assimétrico) | Entregue | RSA_PRIVATE/PUBLIC_KEY + JwtUtil RS256 + iss/aud |
 | Anthropic Claude (extração) | Planejado | ANTHROPIC_API_KEY declarado, OpenAI em uso |
 | RabbitMQ (fila de extrações) | Planejado | Mencionado em protótipos; não no docker-compose |
 | CF Browser Rendering | Planejado | CF_ACCOUNT_ID/CF_API_TOKEN em config.py; sem uso ativo |

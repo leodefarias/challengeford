@@ -350,6 +350,22 @@ class RankingRequest(BaseModel):
     criterios: dict[str, float] | None = None
     perfil: Annotated[str, Field(max_length=50)] | None = None
     incluir_justificativa: bool = True
+    # Specs para perfil="auto" (classificador ML)
+    specs: dict[str, float | int | bool] | None = None
+
+
+class PerfilSugerirRequest(BaseModel):
+    potencia_cv: float
+    torque_nm: float
+    preco_tabela_brl: float
+    capacidade_carga_kg: float
+    capacidade_reboque_kg: float
+    profundidade_vadeo_mm: float
+    angulo_ataque_graus: float
+    angulo_saida_graus: float
+    airbags_quantidade: float
+    tela_central_pol: float
+    frenagem_autonoma: float | bool
 
 
 # ---------------------------------------------------------------------------
@@ -669,29 +685,57 @@ async def _gerar_justificativa(resultados: list[dict], criterios: dict[str, floa
     return response.choices[0].message.content or ""
 
 
+@app.post("/perfil/sugerir")
+@limiter.limit("30/minute")
+async def perfil_sugerir(request: Request, req: PerfilSugerirRequest):
+    """Sugere perfil de ranking via modelo LogisticRegression (Sprint 3 IA/ML)."""
+    from perfil_ml import sugerir_perfil
+
+    try:
+        return sugerir_perfil(req.model_dump())
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.error("perfil/sugerir falhou: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="Falha na inferência ML") from exc
+
+
 @app.post("/ranking")
 @limiter.limit("20/minute")
 async def ranking(request: Request, req: RankingRequest):
     """
     Ranking determinístico por critérios ponderados com justificativa LLM.
-    Use 'perfil' para um preset (familia/desempenho/custo_beneficio/offroad)
+    Use 'perfil' para um preset (familia/desempenho/custo_beneficio/offroad/auto)
     ou 'criterios' para pesos customizados. Se ambos forem fornecidos, criterios prevalece.
+    perfil=auto usa o classificador ML (specs obrigatório).
     """
     # Resolve critérios
     if req.criterios:
         criterios_raw = req.criterios
+        perfil_nome = req.perfil or "custom"
     elif req.perfil:
-        if req.perfil not in PERFIS_PREDEFINIDOS:
+        perfil_resolvido = req.perfil
+        if req.perfil == "auto":
+            if not req.specs:
+                raise HTTPException(
+                    status_code=400,
+                    detail="perfil=auto exige 'specs' com as 11 features do modelo",
+                )
+            from perfil_ml import sugerir_perfil
+
+            sugestao = sugerir_perfil(req.specs)
+            perfil_resolvido = sugestao["perfil"]
+        if perfil_resolvido not in PERFIS_PREDEFINIDOS:
             raise HTTPException(
                 status_code=400,
-                detail=f"Perfil '{req.perfil}' inválido. Disponíveis: {list(PERFIS_PREDEFINIDOS)}"
+                detail=f"Perfil '{perfil_resolvido}' inválido. Disponíveis: {list(PERFIS_PREDEFINIDOS)}"
             )
-        criterios_raw = PERFIS_PREDEFINIDOS[req.perfil]
+        criterios_raw = PERFIS_PREDEFINIDOS[perfil_resolvido]
+        perfil_nome = perfil_resolvido
     else:
         raise HTTPException(status_code=400, detail="Forneça 'criterios' ou 'perfil'.")
 
     criterios = _normalizar_pesos(criterios_raw)
-    perfil_nome = req.perfil or "custom"
 
     if not req.veiculos:
         raise HTTPException(status_code=400, detail="Informe ao menos um veículo.")
