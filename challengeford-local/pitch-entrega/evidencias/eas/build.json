@@ -1,0 +1,48 @@
+{
+  "id": "39c4685a-6cc6-4e26-8655-264be19ebee7",
+  "status": "FINISHED",
+  "platform": "ANDROID",
+  "artifacts": {
+    "buildUrl": "https://expo.dev/artifacts/eas/LJM-_EgZB5dqEb28Tt8bMzkMjhBt4qrunf4hwOqTzfc.apk",
+    "applicationArchiveUrl": "https://expo.dev/artifacts/eas/LJM-_EgZB5dqEb28Tt8bMzkMjhBt4qrunf4hwOqTzfc.apk"
+  },
+  "fingerprint": {
+    "id": "01a0d574-2237-778c-8db4-a0bc4e121a0f",
+    "hash": "444f5f6c6f103fa3681d7f1e211c9e44ff852b24"
+  },
+  "initiatingActor": {
+    "id": "bad0c6ed-8b19-4a72-aaf6-6233d4d5167f",
+    "displayName": "leodefarias"
+  },
+  "logFiles": [
+    "https://storage.googleapis.com/eas-workflows-production/logs/fe75da95-1d0c-4c41-92d8-0a01eb3bfb44/39c4685a-6cc6-4e26-8655-264be19ebee7/2026-09-24T22%3A12%3A01Z-371eedb2-362b-4b8a-968a-6a1a66fe73b1.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260924%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260924T222515Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=4cc105b0cf3d10d339979a91172eb5debe988b8b4bb5041e7408c25d7a67e3bedb353a6cc95fc94671ee48c7289b0350f878e7bc7e08f499d5bb2df3f1a758a72eb9b21ad43fe3578af9e98f4df0753198461c8de8c1ae0f4275da9af6032b8dbee8bdad8a07a6f16b1d537aecdc4de2b38a377c29c0515023a68f814b03ce10aaae382dca4b71cd6b154db936784962055fc9b4b82f1a6ec9ec541e47edaca7d2c41c83169937fbba7c4039f861cdb2b4f9505b6431a8d41649637f401afaad02b0228334d1f43165dfd4314279665f41ce589f6461c2e4a1dac076154e261bc91d74888e715de37dbc90f7353893a92fea0e182cf199bb048937c5d1905479"
+  ],
+  "app": {
+    "id": "fe75da95-1d0c-4c41-92d8-0a01eb3bfb44",
+    "name": "autosight-ford",
+    "slug": "autosight-ford",
+    "ownerAccount": {
+      "id": "1b7946e5-a37c-4998-a56c-41a5853abad6",
+      "name": "leodefarias"
+    }
+  },
+  "distribution": "INTERNAL",
+  "buildProfile": "preview",
+  "appIdentifier": "br.ford.autosight",
+  "sdkVersion": "54.0.0",
+  "appVersion": "1.0.0",
+  "appBuildVersion": "1",
+  "gitCommitHash": "6e13c4e29fd4ec5e808a60cfd375896dbc0357d9",
+  "gitCommitMessage": "feat: entrega Sprint 3 IA/ML AutoSight (classificação de perfil)\n\nNotebook Colab-ready e documentação na pasta entrega/, com comparação de LogisticRegression, SVC, RandomForest e MLP PyTorch.\n\nCo-authored-by: Cursor <cursoragent@cursor.com>",
+  "priority": "NORMAL",
+  "createdAt": "2026-09-24T22:05:53.037Z",
+  "updatedAt": "2026-09-24T22:25:02.691Z",
+  "completedAt": "2026-09-24T22:25:02.446Z",
+  "expirationDate": "2026-10-08T22:05:53.066Z",
+  "isForIosSimulator": false,
+  "metrics": {
+    "buildWaitTime": 5144,
+    "buildQueueTime": 367498,
+    "buildDuration": 776767
+  }
+}

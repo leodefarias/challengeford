@@ -74,6 +74,9 @@ public class JwtFilter extends OncePerRequestFilter {
     private void sendUnauthorized(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write("{\"error\":\"UNAUTHORIZED\",\"message\":\"Token inválido ou expirado\",\"status\":401}");
+        String ts = java.time.LocalDateTime.now().toString();
+        response.getWriter().write(
+                "{\"error\":\"UNAUTHORIZED\",\"message\":\"Token inválido ou expirado\",\"status\":401,\"timestamp\":\""
+                        + ts + "\"}");
     }
 }

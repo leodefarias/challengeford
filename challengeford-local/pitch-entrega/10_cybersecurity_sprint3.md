@@ -32,7 +32,7 @@ IoT/MQTT **não aplicável** neste desafio (catálogo competitivo via HTTPS REST
                                                             └────────────┘
 ```
 
-Implementação: [`.github/workflows/devsecops.yml`](../.github/workflows/devsecops.yml) + [`.github/dependabot.yml`](../.github/dependabot.yml).
+Implementação: workflow na **raiz do monorepo** [`.github/workflows/devsecops.yml`](../../.github/workflows/devsecops.yml) + [`.github/dependabot.yml`](../../.github/dependabot.yml) (paths `challengeford-local/*`). Espelho legado em `challengeford-local/.github/` (não usado pelo GitHub Actions do remote root).
 
 ### 1.2 Etapas e redução de risco
 

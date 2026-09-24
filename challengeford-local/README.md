@@ -249,7 +249,8 @@ npx expo start
 | `GET` | `/api/catalogos/ranking` | Ranking competitivo |
 | `POST` | `/api/chat` | Chat RAG sobre os catálogos |
 
-**Roles disponíveis:** `admin` · `analista` · `viewer`
+**Roles disponíveis:** `admin` · `analista` · `viewer`  
+(Mapeamento rubrica Ford: Administrador=`admin`, Gestor=`analista`, Brigadista=`viewer`)
 
 Usuários semeados via Flyway V3. Consulte os arquivos de migração para as credenciais padrão.
 

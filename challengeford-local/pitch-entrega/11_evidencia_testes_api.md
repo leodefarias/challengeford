@@ -1,8 +1,8 @@
 # Evidência — `mvn test` (Sprint 3)
 
-**Data:** 2026-09-21  
-**JDK:** Temurin 21 (`.tools/jdk-21`)  
-**Resultado:** `BUILD SUCCESS` — **Tests run: 30, Failures: 0, Errors: 0, Skipped: 0**
+**Data:** 2026-09-24  
+**JDK:** Temurin 21  
+**Resultado:** `BUILD SUCCESS` — **Tests run: 30, Failures: 0, Errors: 0, Skipped: 0** (revalidado na entrega Sprint 3)
 
 ## Suites
 

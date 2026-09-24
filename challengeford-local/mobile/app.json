@@ -33,6 +33,12 @@
     "plugins": [
       "expo-font",
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "fe75da95-1d0c-4c41-92d8-0a01eb3bfb44"
+      }
+    },
+    "owner": "leodefarias"
   }
 }

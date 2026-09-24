@@ -13,3 +13,4 @@ mobile/dist/
 *.apk
 *.aab
 backend-java/target/
+entregas/**/*.apk

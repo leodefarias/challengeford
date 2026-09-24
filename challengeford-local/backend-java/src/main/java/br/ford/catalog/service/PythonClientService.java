@@ -127,4 +127,19 @@ public class PythonClientService {
             throw new PythonServiceException("Microsserviço de ranking indisponível", e);
         }
     }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> sugerirPerfil(Map<String, Object> specs) {
+        String url = pythonBaseUrl + "/perfil/sugerir";
+        try {
+            ResponseEntity<Map> response = extractionRestTemplate.postForEntity(url, specs, Map.class);
+            if (response.getBody() == null) {
+                throw new PythonServiceException("Resposta vazia do perfil ML");
+            }
+            return response.getBody();
+        } catch (RestClientException e) {
+            log.error("Erro ao chamar Python /perfil/sugerir: {}", e.getMessage());
+            throw new PythonServiceException("Microsserviço ML indisponível", e);
+        }
+    }
 }

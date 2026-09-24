@@ -85,6 +85,15 @@ public class CatalogoController {
         return ResponseEntity.ok(executarRanking(request.perfil(), request.criterios(), request.ids()));
     }
 
+    @Operation(summary = "Sugerir perfil via ML",
+            description = "Classifica specs da pickup em familia/desempenho/custo_beneficio/offroad (LogisticRegression)")
+    @ApiResponse(responseCode = "200", description = "Perfil sugerido com probabilidades")
+    @PostMapping("/perfil/sugerir")
+    @PreAuthorize("hasAnyRole('ANALISTA', 'ADMIN', 'VIEWER')")
+    public ResponseEntity<Map<String, Object>> sugerirPerfil(@RequestBody Map<String, Object> specs) {
+        return ResponseEntity.ok(pythonClient.sugerirPerfil(specs));
+    }
+
     private Map<String, Object> executarRanking(String perfil, Map<String, Double> criterios, List<Long> ids) {
         List<Map<String, String>> veiculos = catalogoService.listarCatalogos().stream()
                 .filter(c -> ids == null || ids.isEmpty() || ids.contains(c.id()))

@@ -1,0 +1,4 @@
+modelo=LogisticRegression
+test_accuracy=0.9833333333333333
+test_f1_macro=0.983508517578833
+params={'model__C': 10.0, 'model__l1_ratio': 0.5, 'model__penalty': 'elasticnet', 'model__solver': 'saga'}
