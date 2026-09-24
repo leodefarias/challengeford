@@ -13,5 +13,5 @@ python-dotenv>=1.0.0
 fastapi>=0.111.0
 uvicorn[standard]>=0.30.0
 firecrawl-py>=0.0.16
-slowapi>=0.1.9
+slowapi>=0.1.10
 pytest>=8.0.0
