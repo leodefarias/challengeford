@@ -210,7 +210,7 @@ AUDIT|LOGIN_OK|email=analista@ford.com.br|role=analista|trace=a1b2c3
 - [x] STRIDE documentado
 - [x] OWASP API/Mobile/ASVS mapeados
 - [x] LGPD anonimização
-- [ ] Professor no Azure Boards (ação manual do grupo)
+- [x] Professor no Azure Boards (Basic)
 - [x] Prints do workflow Actions verdes (pasta `prints/`, run DevSecOps #2)
 
 ### 4.4 Plano de segurança contínua

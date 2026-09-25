@@ -7,9 +7,9 @@
 - BOARDS: https://dev.azure.com/RM555211/AutoSight/_backlogs
 - Work items: **45** (evidência em `evidencias/azure/`)
 
-### Professor (1 clique residual)
+### Professor
 
-Convite API erro **5101** (org bloqueia fora do diretório). Habilitar invitations externas e adicionar `profyan.coelho@fiap.com.br` como **Basic** + **Project Administrators**.
+`profyan.coelho@fiap.com.br` está na organização como **Basic**.
 
 ## APK EAS (Mobile) — PRONTO
 
