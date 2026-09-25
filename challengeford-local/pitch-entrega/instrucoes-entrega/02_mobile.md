@@ -8,7 +8,7 @@
    https://expo.dev/accounts/leodefarias/projects/autosight-ford/builds/39c4685a-6cc6-4e26-8655-264be19ebee7
 3. **APK local** (se o Teams aceitar ~74 MB): `autosight-preview.apk` neste diretório  
 4. **ZIP código mobile:** `autosight-mobile-sprint3.zip`
-5. Galeria / prints: `challengeford-local/mobile/screenshots/` (wireframe + instruções Maestro)
+5. Prints reais das 12 telas: pasta `prints/` (também em `challengeford-local/mobile/screenshots/`)
 
 ## IoT
 

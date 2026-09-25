@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Gera ZIPs de entrega (sem secrets / node_modules / target).
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 ENT="$ROOT/entregas"
 cd "$ROOT"
 
