@@ -20,11 +20,11 @@ jobs:
     name: Secret Scanning (Gitleaks)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
@@ -32,21 +32,35 @@ jobs:
   sca-java:
     name: SCA (Maven dependencies)
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
           cache-dependency-path: challengeford-local/backend-java/pom.xml
-      - name: OWASP Dependency-Check
+      - name: Cache NVD database
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: nvd-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: nvd-${{ runner.os }}-
+      - name: OWASP Dependency-Check (report)
         working-directory: challengeford-local/backend-java
         run: |
           mvn -B -q org.owasp:dependency-check-maven:10.0.4:check \
-            -DfailBuildOnCVSS=9 \
             -Dformat=HTML \
-            -DprettyPrint=true || true
+            -DprettyPrint=true \
+            || echo "::warning::Dependency-Check não concluiu (download do NVD) — ver log do passo"
+      - name: Upload Dependency-Check report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: dependency-check-report
+          path: challengeford-local/backend-java/target/dependency-check-report.html
+          if-no-files-found: ignore
       - name: Dependency tree (evidence)
         working-directory: challengeford-local/backend-java
         run: mvn -B -q dependency:tree -Dverbose=false
@@ -55,37 +69,44 @@ jobs:
     name: SCA (npm audit mobile)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: challengeford-local/mobile/package-lock.json
       - name: npm ci
         working-directory: challengeford-local/mobile
         run: npm ci
-      - name: npm audit (high+)
+      - name: npm audit gate (high+)
         working-directory: challengeford-local/mobile
-        run: npm audit --audit-level=high
-        continue-on-error: true
+        run: npx --yes audit-ci@7 --config audit-ci.jsonc
 
-  sast-and-tests:
-    name: SAST (Semgrep) + Java tests
+  sast:
+    name: SAST (Semgrep OWASP)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Semgrep OWASP
-        uses: semgrep/semgrep-action@v1
-        with:
-          config: p/owasp-top-ten
-        continue-on-error: true
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - name: Semgrep p/owasp-top-ten
+        run: |
+          docker run --rm -e SEMGREP_SEND_METRICS=off -v "$PWD:/src" -w /src semgrep/semgrep:latest \
+            semgrep scan --config p/owasp-top-ten --error --metrics=off \
+              challengeford-local/backend-java/src \
+              challengeford-local/microsservico-ia/src \
+              challengeford-local/mobile/src
+
+  tests:
+    name: Java tests (Unit + MockMvc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
           cache-dependency-path: challengeford-local/backend-java/pom.xml
-      - name: Unit + MockMvc tests
+      - name: mvn test
         working-directory: challengeford-local/backend-java
         run: mvn -B test
 
@@ -93,23 +114,23 @@ jobs:
     name: Container Security (Trivy)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Trivy fs (repo)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: challengeford-local
           severity: CRITICAL
           exit-code: "1"
       - name: Trivy config Dockerfiles
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: challengeford-local
           severity: CRITICAL
           exit-code: "1"
       - name: Trivy HIGH (advisory)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: challengeford-local

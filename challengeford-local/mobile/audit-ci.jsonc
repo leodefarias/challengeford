@@ -1,0 +1,7 @@
+{
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  "high": true,
+  // image-size@1.x é usado só pelo Metro no build para ler imagens do próprio repositório;
+  // a correção existe apenas no 2.x, cuja API quebra o bundler do Expo SDK 54.
+  "allowlist": ["GHSA-5p2g-fcmc-qvqq", "GHSA-w3rx-r6r6-pgpr"]
+}
