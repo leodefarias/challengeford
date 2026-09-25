@@ -8,7 +8,7 @@ POC de análise competitiva de catálogos de pickups para Ford Brasil — FIAP C
 
 > **Nota para avaliadores — credenciais no `.env`**
 >
-> O arquivo `.env` foi incluído intencionalmente neste zip de entrega para que o projeto possa ser executado sem configuração adicional. Todas as chaves e senhas presentes foram geradas especificamente para este ambiente de avaliação do FIAP Challenge e **não estão expostas em repositório público**.
+> O arquivo `.env` foi incluído intencionalmente neste zip de entrega para que o projeto possa ser executado sem configuração adicional. A senha Oracle da FIAP está só nesse `.env` (não no Git). `OPENAI_API_KEY` fica vazia de propósito: o stack sobe, mas chat, extração e o seed automático de catálogos não rodam até a chave ser preenchida. `JWT_SECRET`, `ENCRYPTION_KEY` e `INTERNAL_API_KEY` vazios são gerados pelo `start.sh` / `start.bat`.
 >
 > Em um ambiente de produção real, o `.env` jamais seria versionado ou distribuído — ele seria injetado via secrets manager (Vault, AWS Secrets Manager etc.). A arquitetura de segurança do projeto já contempla essa separação: o `.gitignore` exclui `.env`, e o code base usa variáveis de ambiente em todos os pontos sensíveis.
 
@@ -118,7 +118,7 @@ cp .env.example .env
 
 ```env
 # ── LLM (obrigatório) ──────────────────────────────────────
-OPENAI_API_KEY=sk-...                 # Chave OpenAI — obrigatória para extração e chat
+OPENAI_API_KEY=                       # vazio no ZIP de entrega: chat, extração e seed não rodam até preencher
 LLM_PROVIDER=openai
 
 # ── Banco Oracle FIAP (obrigatório) ───────────────────────

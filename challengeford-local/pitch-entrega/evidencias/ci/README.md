@@ -7,7 +7,7 @@ Workflow DevSecOps na raiz do repositório:
 - `.gitleaks.toml`
 - `challengeford-local/mobile/audit-ci.jsonc` (gate do npm audit)
 
-Actions: https://github.com/leodefarias/challengeford/actions (repositório privado — requer acesso)
+Actions: https://github.com/leodefarias/challengeford/actions
 
 Espelho legado (não executado pelo remote root): `challengeford-local/.github/`
 
@@ -15,14 +15,14 @@ Espelho legado (não executado pelo remote root): `challengeford-local/.github/`
 
 | Arquivo | Job | Resultado |
 |---------|-----|-----------|
-| `01-actions-lista.png` | Lista de runs | — |
-| `02-devsecops-run.png` | Resumo do run com os 6 jobs | — |
+| `01-actions-lista.png` | Lista de runs | OK — DevSecOps #2 sucesso (57m 36s) |
+| `02-devsecops-run.png` | Resumo do run com os 6 jobs | OK — status Success |
 | `03-gitleaks.png` | Secret Scanning (Gitleaks) | OK — *No leaks detected* |
 | `04-sca-npm.png` | SCA — `audit-ci --high` (mobile) | OK |
 | `05-semgrep.png` | SAST — Semgrep `p/owasp-top-ten` com `--error` | OK — 0 findings |
 | `06-tests.png` | Java tests (Unit + MockMvc) | OK |
 | `07-trivy.png` | Container Security (Trivy fs + config) | OK — 0 CRITICAL |
-| `08-sca-maven.png` | SCA — OWASP Dependency-Check (Maven) | relatório HTML como artefato |
+| `08-sca-maven.png` | SCA — OWASP Dependency-Check (Maven) | OK — job verde; aviso de NVD no resumo do run |
 
 ## Correções aplicadas no run #2
 

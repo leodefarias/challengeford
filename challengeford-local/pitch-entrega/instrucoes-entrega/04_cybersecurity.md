@@ -6,7 +6,7 @@
    `10_cybersecurity_sprint3.md` (também no ZIP)  
 2. **Link GitHub Actions:** https://github.com/leodefarias/challengeford/actions  
 3. **ZIP:** `autosight-cyber-sprint3.zip`  
-4. Prints do pipeline: pasta `prints/` (DevSecOps #2 — 6 jobs). Faltam `01-actions-lista.png`, `02-devsecops-run.png` e `08-sca-maven.png`, a capturar quando o job do Maven terminar; depois, regerar o ZIP.  
+4. Prints do pipeline: pasta `prints/` (DevSecOps #2 — 6 jobs verdes, incluindo lista, resumo e Maven).  
 
 ## Pipeline
 

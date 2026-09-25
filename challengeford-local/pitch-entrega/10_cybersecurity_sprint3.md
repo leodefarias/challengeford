@@ -211,7 +211,7 @@ AUDIT|LOGIN_OK|email=analista@ford.com.br|role=analista|trace=a1b2c3
 - [x] OWASP API/Mobile/ASVS mapeados
 - [x] LGPD anonimização
 - [ ] Professor no Azure Boards (ação manual do grupo)
-- [ ] Prints Actuator/health + workflow Actions verdes (anexar Teams)
+- [x] Prints do workflow Actions verdes (pasta `prints/`, run DevSecOps #2)
 
 ### 4.4 Plano de segurança contínua
 

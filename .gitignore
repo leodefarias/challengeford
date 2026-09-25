@@ -1,5 +1,7 @@
 **/.env
 **/.env.local
+# ZIP de arquitetura leva o .env com senha Oracle — fica só no disco, para o Teams
+entregas/01_arquitetura/*.zip
 **/*.apk
 **/*.aab
 **/node_modules/
