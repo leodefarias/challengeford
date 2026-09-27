@@ -398,4 +398,4 @@ Significa que um arquivo SQL de migração foi alterado após ser aplicado. Não
 | Gustavo Laur | RM556603 |
 | Giancarlo Cestarolli | RM555248 |
 
-FIAP — Challenge Autosight · 2025
+FIAP — Challenge Autosight · 2026
