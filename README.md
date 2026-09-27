@@ -1,0 +1,401 @@
+# Ford Challenge — Análise Competitiva de Catálogos Automotivos
+
+![Java](https://img.shields.io/badge/Java-21-orange) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.5-brightgreen) ![Python](https://img.shields.io/badge/Python-3.12-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-teal) ![React Native](https://img.shields.io/badge/React%20Native-0.81-61DAFB) ![Expo](https://img.shields.io/badge/Expo-54-black) ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
+
+POC de análise competitiva de catálogos de pickups para Ford Brasil — FIAP Challenge Autosight. Extrai, normaliza e compara especificações técnicas de 6 modelos do mercado usando IA generativa e RAG.
+
+---
+
+> **Nota para avaliadores — credenciais no `.env`**
+>
+> O arquivo `.env` foi incluído intencionalmente neste zip de entrega para que o projeto possa ser executado sem configuração adicional. A senha Oracle da FIAP está só nesse `.env` (não no Git). `OPENAI_API_KEY` fica vazia de propósito: o stack sobe, mas chat, extração e o seed automático de catálogos não rodam até a chave ser preenchida. `JWT_SECRET`, `ENCRYPTION_KEY` e `INTERNAL_API_KEY` vazios são gerados pelo `start.sh` / `start.bat`.
+>
+> Em um ambiente de produção real, o `.env` jamais seria versionado ou distribuído — ele seria injetado via secrets manager (Vault, AWS Secrets Manager etc.). A arquitetura de segurança do projeto já contempla essa separação: o `.gitignore` exclui `.env`, e o code base usa variáveis de ambiente em todos os pontos sensíveis.
+
+---
+
+## Arquitetura
+
+```
+┌─────────────────────────────────────────┐
+│   App Mobile (React Native + Expo)      │
+│   Porta: 8081 (dev server)              │
+└──────────────────┬──────────────────────┘
+                   │ HTTPS + Bearer JWT
+                   ▼
+┌─────────────────────────────────────────┐
+│   Nginx Reverse Proxy                   │
+│   :80 → redirect HTTPS                 │
+│   :443 TLS 1.2/1.3 · HSTS · CSP       │
+└──────────────────┬──────────────────────┘
+                   │ proxy_pass HTTP interno
+                   ▼
+┌─────────────────────────────────────────┐
+│   Java Spring Boot API                  │
+│   Porta: 8080 (interna)                 │
+│   Autenticação JWT · RBAC · Swagger UI  │
+│   Flyway Migrations · HikariCP Pool     │
+└────────┬─────────────────┬──────────────┘
+         │ REST interno    │ JPA / Hibernate
+         │ X-Internal-Token│
+         ▼                 ▼
+┌──────────────────┐  ┌───────────────────┐
+│ Python FastAPI   │  │ Oracle Database   │
+│ Porta: 8000      │  │ oracle.fiap.com.br│
+│                  │  │ :1521/ORCL        │
+│ Agente ReAct     │  │                   │
+│ RAG + LLM        │  │ 8 tabelas         │
+│ PDF · Scraping   │  │ (Flyway V1-V4)    │
+│ FIPE API         │  └───────────────────┘
+└────────┬─────────┘
+         │
+    ┌────┴────┐
+    │ChromaDB │  ← 4 coleções (embeddings all-MiniLM-L6-v2)
+    │ volume  │     specs · terminologia · ranges · capabilities
+    └─────────┘
+```
+
+**Veículos monitorados:** Ford Ranger Raptor · Toyota Hilux GR-S · VW Amarok V6 Extreme · Chevrolet S10 High Country · Mitsubishi Nova-Triton HPE-S · Nissan Frontier PRO-4X
+
+---
+
+## Stack por serviço
+
+| Serviço | Tecnologia | Porta |
+|---------|-----------|-------|
+| Mobile | React Native 0.81 + Expo 54 + TypeScript | 8081 |
+| Nginx | Reverse proxy TLS 1.2/1.3 + redirect HTTP→HTTPS + gateway demo :8082 | 80 / 443 / 8082 |
+| Backend Java | Spring Boot 3.2.5 + Java 21 + Oracle JDBC | 8080 |
+| Microsserviço IA | FastAPI + Python 3.12 + ChromaDB | 8000 |
+| Banco de dados | Oracle 12c+ (remoto FIAP) | 1521 |
+| Vector store | ChromaDB (embutido no container Python) | — |
+| LLM | GPT-4.1-mini (OpenAI) | — |
+
+---
+
+## Pré-requisitos
+
+### Obrigatórios
+
+| Ferramenta | Versão mínima | Como instalar |
+|---|---|---|
+| **Docker Desktop** | 24+ | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
+| **Docker Compose** | v2 (`docker compose`) ou v1 (`docker-compose`) | Incluído no Docker Desktop |
+| **Node.js** | 18+ | [nodejs.org](https://nodejs.org) |
+| **npm** | 9+ | Incluído no Node.js |
+| **openssl** | qualquer | Linux/macOS: pré-instalado · Windows: instale [Git for Windows](https://git-scm.com/download/win) |
+
+> **Java, Python e Maven não precisam ser instalados.** Todos rodam dentro dos containers Docker.
+
+### Verificação rápida
+
+```bash
+docker --version          # Docker version 24.x.x
+docker compose version    # Docker Compose version v2.x.x
+node --version            # v18.x.x ou superior
+npm --version             # 9.x.x ou superior
+openssl version           # OpenSSL 3.x.x
+```
+
+### Opcionais
+
+| Ferramenta | Para que serve |
+|---|---|
+| Chave OpenAI | Fallback de LLM se Anthropic falhar |
+| Chave Firecrawl | Scraping avançado de SPAs (melhora extração) |
+
+---
+
+## Configuração
+
+### 1. Copiar o arquivo de variáveis de ambiente
+
+```bash
+cp .env.example .env
+```
+
+### 2. Preencher as variáveis obrigatórias no `.env`
+
+```env
+# ── LLM (obrigatório) ──────────────────────────────────────
+OPENAI_API_KEY=                       # vazio no ZIP de entrega: chat, extração e seed não rodam até preencher
+LLM_PROVIDER=openai
+
+# ── Banco Oracle FIAP (obrigatório) ───────────────────────
+ORACLE_URL=jdbc:oracle:thin:@oracle.fiap.com.br:1521/ORCL
+ORACLE_USER=RM555211
+ORACLE_PASSWORD=SUA_SENHA_FIAP
+
+# ── Segredos de segurança (obrigatório) ────────────────────
+# JWT RS256 — par RSA (PKCS#8 + X.509) em Base64 (sem PEM headers)
+# Gerar: ver scripts/gen-rsa-jwt.ps1 ou bloco openssl abaixo
+RSA_PRIVATE_KEY=<base64-pkcs8>
+RSA_PUBLIC_KEY=<base64-x509>
+
+# Gere com: openssl rand -base64 32
+ENCRYPTION_KEY=<string-base64-32-bytes>
+
+# Gere com: openssl rand -hex 32
+INTERNAL_API_KEY=<token-comunicacao-interna-java-python>
+
+# ── Opcionais ──────────────────────────────────────────────
+FIRECRAWL_API_KEY=                     # Scraping avançado (SPAs)
+CF_ACCOUNT_ID=                         # Cloudflare Browser Rendering
+CF_API_TOKEN=
+```
+
+> Gerar segredos:
+> ```bash
+> # AES + token interno
+> echo "ENCRYPTION_KEY=$(openssl rand -base64 32)"
+> echo "INTERNAL_API_KEY=$(openssl rand -hex 32)"
+> # Par RSA para JWT RS256 (PowerShell): .\scripts\gen-rsa-jwt.ps1
+> # Se RSA_* vazios, a API gera par efêmero (tokens invalidam no restart).
+> ```
+
+---
+
+## Como rodar
+
+### Método rápido (recomendado)
+
+```bash
+# Linux / macOS
+./start.sh
+
+# Windows (Prompt de Comando)
+start.bat
+```
+
+O script faz automaticamente:
+1. Valida pré-requisitos e variáveis de ambiente
+2. Gera certificado TLS auto-assinado para o nginx (se não existir)
+3. Builda e sobe os containers Docker (`nginx` + `python-ia` + `java-api`)
+4. Aguarda healthchecks (até 120s Python, 60s Java)
+5. Instala dependências do mobile se necessário
+6. Abre o Expo (`npx expo start`)
+
+Ao terminar o Expo (Ctrl+C), o script para automaticamente todos os containers.
+
+### Demonstração com QR (celular em qualquer rede)
+
+O notebook precisa de internet. Quem escanear **não** precisa da Wi‑Fi da sala — 4G vale.
+
+```bash
+./start.sh --demo
+# Windows: start.bat --demo
+```
+
+1. Exporta o app web e sobe um túnel HTTPS público (Cloudflare Quick Tunnel)
+2. Abre uma página com o QR dessa URL
+3. Quem escanear entra já autenticado no Comparativo (Ranger Raptor vs Hilux GR-S)
+
+A URL do túnel muda a cada execução. Ctrl+C encerra o túnel. Se a rede da sala bloquear Cloudflare, a página do QR mostra o erro — não use IP local (o celular não alcança).
+
+`./zip-seguro.sh --demo` é outra coisa: gera o zip de entrega com `.env`, não sobe o túnel.
+
+### Método manual (dois terminais)
+
+**Terminal 1 — Backend:**
+```bash
+# Gerar cert TLS (uma vez)
+mkdir -p nginx/certs
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout nginx/certs/key.pem -out nginx/certs/cert.pem \
+  -subj "/C=BR/ST=SP/L=SaoPaulo/O=FordChallenge/CN=localhost"
+
+docker compose up --build
+```
+
+**Terminal 2 — Mobile (aguardar backend saudável):**
+```bash
+cd mobile
+npm install
+npx expo start
+```
+
+---
+
+## Verificação após subir
+
+| Serviço | URL | Esperado |
+|---------|-----|---------|
+| Nginx — redirect HTTP | http://localhost | Redireciona para HTTPS (301) |
+| Java API — health (Nginx TLS) | https://localhost/actuator/health | `{"status":"UP"}` |
+| Java API — direto | http://localhost:8080/actuator/health | `{"status":"UP"}` |
+| Java API — Swagger UI | http://localhost:8080/swagger-ui.html | Interface OpenAPI (requer login ADMIN) |
+| Python IA | http://localhost:8000/health | `{"status":"ok"}` (ou equivalente) |
+| Demo gateway (após `--demo`) | http://localhost:8082 | App web + `/api` no mesmo host |
+
+> O navegador vai exibir aviso de certificado ao acessar `https://localhost` (cert auto-assinado). Clique em "Avançado → Continuar" para prosseguir. Isso é esperado em ambiente local.
+
+### Credenciais padrão (semeadas via Flyway)
+
+| Usuário | Senha | Role |
+|---------|-------|------|
+| `admin@ford.com.br` | `Ford@2025` | admin |
+| `analista@ford.com.br` | `Ford@2025` | analista |
+
+---
+
+## Endpoints principais (Java API)
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `POST` | `/api/auth/login` | Autenticação — retorna JWT |
+| `GET` | `/api/catalogos` | Lista todos os catálogos |
+| `GET` | `/api/catalogos/{id}` | Detalhes de um veículo |
+| `POST` | `/api/catalogos/comparar` | Comparação entre 2-6 veículos |
+| `GET` | `/api/catalogos/ranking` | Ranking competitivo |
+| `POST` | `/api/chat` | Chat RAG sobre os catálogos |
+
+**Roles disponíveis:** `admin` · `analista` · `viewer`  
+(Mapeamento rubrica Ford: Administrador=`admin`, Gestor=`analista`, Brigadista=`viewer`)
+
+Usuários semeados via Flyway V3. Consulte os arquivos de migração para as credenciais padrão.
+
+---
+
+## Telas do app mobile
+
+| # | Tela | Descrição |
+|---|------|-----------|
+| 1 | Login | Autenticação com email/senha |
+| 2 | Home | Specs do veículo — motorização, tração, segurança, off-road |
+| 3 | Comparativo | Comparação lado a lado (Ford vs Toyota vs VW etc.) |
+| 4 | Score | Radar de score competitivo por categoria |
+| 5 | Gaps | Lacunas de capability vs. concorrentes |
+| 6 | Chat | Q&A com RAG sobre os catálogos |
+| 7 | Timeline | Histórico de atualizações dos catálogos |
+| 8 | Itens Pendentes | Mapeamento de terminologia desconhecida |
+| 9 | Status do Agente | Dashboard de monitoramento do agente IA |
+| 10 | Eventos de Segurança | Feed de alertas do sistema |
+
+---
+
+## Estrutura de pastas
+
+```
+challengeford-local/
+├── backend-java/               # Spring Boot API
+│   ├── src/main/java/br/ford/catalog/
+│   │   ├── api/controller/     # AuthController, CatalogoController, ChatController
+│   │   ├── domain/entity/      # Entidades JPA
+│   │   ├── service/            # Lógica de negócio
+│   │   └── security/           # JWT + RBAC
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│   │   └── db/migration/       # Flyway V1-V5
+│   └── Dockerfile
+│
+├── microsservico-ia/           # FastAPI + Agente IA
+│   ├── src/
+│   │   ├── api/main.py         # Entry point FastAPI
+│   │   ├── agent/              # ReAct agent + tools
+│   │   ├── knowledge_base/     # ChromaDB (4 coleções RAG)
+│   │   ├── schema.py           # CatalogoSchema (~50 atributos, Pydantic v2)
+│   │   └── llm_client.py       # OpenAI (GPT-4.1-mini)
+│   ├── data/
+│   │   ├── seed/               # JSON seed (6 veículos)
+│   │   └── chromadb/           # Persistência vetorial
+│   ├── scripts/
+│   │   └── 01_seed_kb.py       # Inicializa ChromaDB (idempotente)
+│   └── Dockerfile
+│
+├── mobile/                     # React Native + Expo
+│   ├── src/
+│   │   ├── screens/            # 10 telas
+│   │   ├── components/         # 8 componentes reutilizáveis
+│   │   ├── services/api.ts     # Cliente axios + interceptors JWT
+│   │   ├── navigation/         # Stack + Bottom Tabs
+│   │   └── theme/              # Design tokens (cores, tipografia, espaçamento)
+│   ├── App.tsx
+│   └── package.json
+│
+├── demo/                       # QR da demonstração (túnel público)
+│   ├── qr.html                 # Página aberta por ./start.sh --demo
+│   ├── qrcode.min.js           # Gerador de QR local (sem API externa)
+│   └── wait-tunnel.mjs         # Lê a URL https://*.trycloudflare.com
+├── nginx/
+│   ├── conf/nginx.conf         # Reverse proxy TLS 1.2/1.3, redirect HTTP→HTTPS
+│   └── certs/                  # cert.pem + key.pem (gerados pelo start.sh)
+├── docker-compose.yml          # Orquestração dos serviços (nginx + java + python)
+├── .env.example                # Template de variáveis (sem segredos)
+├── start.sh                    # Script de inicialização (Linux/macOS)
+├── start.bat                   # Script de inicialização (Windows)
+└── zip-seguro.sh               # Gera zip sem segredos (--demo inclui .env)
+```
+
+---
+
+## Troubleshooting
+
+**Python demora para subir (>60s)**
+Primeiro boot baixa o modelo de embeddings `all-MiniLM-L6-v2` e o Chromium para Playwright. Normal só na primeira vez.
+
+**Java retorna erro de conexão com Oracle**
+Verifique se `ORACLE_URL`, `ORACLE_USER` e `ORACLE_PASSWORD` estão corretos no `.env` e se há acesso de rede a `oracle.fiap.com.br:1521`.
+
+**App mobile não consegue chamar a API**
+Confirme que `EXPO_PUBLIC_API_URL` aponta para `https://localhost` (ou `http://localhost:8080` como fallback direto sem TLS). Em dispositivo físico, substitua `localhost` pelo IP da máquina na rede local.
+
+**Nginx não inicia / erro de certificado**
+```bash
+# Verificar logs do nginx
+docker logs ford-nginx
+
+# Regenerar certificado
+rm nginx/certs/key.pem nginx/certs/cert.pem
+./start.sh   # gera automaticamente e sobe tudo
+```
+
+**Porta 80, 443, 8080, 8000 ou 8082 já em uso**
+```bash
+# Verificar processo usando a porta
+sudo lsof -i :443
+sudo lsof -i :8082
+# Parar todos os containers
+docker compose --profile demo down
+```
+
+**QR da demo não abre / túnel não sobe**
+O notebook precisa de internet de saída para a Cloudflare. Redes corporativas às vezes bloqueiam. Veja `docker logs ford-demo-tunnel`. Não use o IP local no celular — isso exige a mesma Wi‑Fi e quebra a demo.
+
+**ChromaDB com erro ou dados corrompidos**
+```bash
+docker volume rm ford_chromadb
+docker compose up --build
+```
+O seed repopula automaticamente na reinicialização.
+
+**Flyway falha na migração**
+```
+FlywayException: Migration checksum mismatch
+```
+Significa que um arquivo SQL de migração foi alterado após ser aplicado. Não edite arquivos `V*.sql` já executados.
+
+---
+
+## Entregas Sprint 3 (repos)
+
+| Disciplina | Artefato |
+|------------|----------|
+| QA / Azure DevOps | [pitch-entrega/09_azure_devops_backlog.md](pitch-entrega/09_azure_devops_backlog.md) · [setup](pitch-entrega/azure-devops/README_SETUP.md) |
+| Cybersecurity | [pitch-entrega/10_cybersecurity_sprint3.md](pitch-entrega/10_cybersecurity_sprint3.md) · [`.github/workflows/devsecops.yml`](.github/workflows/devsecops.yml) |
+| Web Services — testes | [pitch-entrega/11_evidencia_testes_api.md](pitch-entrega/11_evidencia_testes_api.md) · `cd backend-java && mvn test` |
+| Mobile APK | [mobile/BUILD_APK.md](mobile/BUILD_APK.md) · [mobile/README.md](mobile/README.md) · [galeria](mobile/screenshots/gallery.html) |
+
+> **Azure Boards (cloud):** criar org + convidar professor — ver checklist em `pitch-entrega/azure-devops/README_SETUP.md`.  
+> **APK:** exige `npx eas-cli login` na conta Expo do grupo.
+
+---
+
+## Equipe
+
+| Nome | RM |
+|---|---|
+| Leonardo de Farias | RM555211 |
+| Gustavo Laur | RM556603 |
+| Giancarlo Cestarolli | RM555248 |
+
+FIAP — Challenge Autosight · 2026
